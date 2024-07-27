@@ -175,7 +175,7 @@ let tensor1 = Tensor::new(vec![2, 2], 1.0);
 
 // Create a tensor with integer numbers and cast to floating-point
 let tensor2 = Tensor::new(vec![2, 2], 2);
-let tensor2_float = tensor2.cast::<f64>(); // Explicit casting to f64, but it can be done implicitly:
+let tensor2_float = tensor2.cast::<f64>(); // Explicit casting to f64, but it can be done implicitly
 
 // Perform tensor operations
 let result_add = tensor1.add(&tensor2_float);
