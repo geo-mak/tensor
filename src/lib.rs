@@ -361,7 +361,7 @@ where
     ///
     /// # Panics
     ///
-    /// Panics if the dimensions of `self` and `other` do not match. Both tensors must have the same dimensions to perform the addition.
+    /// Panics if the dimensions of `self` and `other` do not match.
     ///
     /// # Example
     ///
@@ -419,7 +419,7 @@ where
     ///
     /// # Panics
     ///
-    /// Panics if the dimensions of `self` and `other` do not match. Both tensors must have the same dimensions to perform the subtraction.
+    /// Panics if the dimensions of `self` and `other` do not match.
     ///
     /// # Example
     ///
@@ -477,7 +477,7 @@ where
     ///
     /// # Panics
     ///
-    /// Panics if the dimensions of `self` and `other` do not match. Both tensors must have the same dimensions to perform the multiplication.
+    /// Panics if the dimensions of `self` and `other` do not match.
     ///
     /// # Example
     ///
@@ -536,7 +536,7 @@ where
     ///
     /// # Panics
     ///
-    /// Panics if the dimensions of `self` and `other` do not match. Both tensors must have the same dimensions to perform the division.
+    /// Panics if the dimensions of `self` and `other` do not match.
     /// Additionally, it will panic if any element of `other` is zero, as division by zero is not allowed.
     ///
     /// # Example
@@ -639,7 +639,7 @@ where
     ///
     /// # Panics
     ///
-    /// Panics if the dimensions of `self` and `other` do not match. Both tensors must have the same dimensions for the addition to be performed.
+    /// Panics if the dimensions of `self` and `other` do not match.
     ///
     /// # Example
     ///
@@ -689,7 +689,6 @@ where
     /// # Panics
     ///
     /// Panics if the dimensions of `self` and `other` do not match.
-    /// Both tensors must have the same dimensions for the subtraction to be performed.
     ///
     /// # Example
     ///
@@ -737,7 +736,7 @@ where
     ///
     /// # Panics
     ///
-    /// Panics if the dimensions of `self` and `other` do not match. Both tensors must have the same dimensions for the multiplication to be performed.
+    /// Panics if the dimensions of `self` and `other` do not match.
     ///
     /// # Example
     ///
