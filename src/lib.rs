@@ -1,4 +1,5 @@
 pub mod casting;
+mod similarity;
 
 use crate::casting::Cast;
 use std::fmt;
@@ -11,9 +12,9 @@ use std::slice::{Iter, IterMut};
 /// A multidimensional tensor data structure.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tensor<T> {
-    data: Vec<T>,           // Stores the elements of the tensor in a flattened vector.
-    dimensions: Vec<usize>, // Stores the size of each dimension of the tensor.
-    strides: Vec<usize>,    // Stores the strides for each dimension.
+    data: Vec<T>,
+    dimensions: Vec<usize>,
+    strides: Vec<usize>,
 }
 
 impl<T> Tensor<T>

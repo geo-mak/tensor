@@ -2,7 +2,7 @@
 
 Multidimensional tensor implementation in Rust with focus on simplicity in terms of usage and implementation. 
 
-## Current Features
+## Features
 
 - Element-wise operations: addition, subtraction, multiplication, division
 - Reshaping tensors
@@ -10,12 +10,22 @@ Multidimensional tensor implementation in Rust with focus on simplicity in terms
 - In-place modifications
 - Direct and safe indexing
 - Display formatted tensor output
+- *Similarity measures: Dot product, Euclidean distance, Cosine similarity
+
+*New features
 
 ## Planned Features
 
 - Creating tensor from structures like vectors with auto-inference of dimensionality.
-- Similarity measures
 - Quantization
+- Broadcasting
+
+## Considered Features
+
+- Using SIMD for operations: SIMD in 'std::arch' is not portable across different platforms and 'Portable SIMD' in Rust is still unstable.
+Once 'Portable SIMD' is stable, it will be considered for optimization.
+
+- Parallelization: Rayon is a good candidate for parallelization.
 
 ## Examples
 
@@ -162,6 +172,36 @@ assert_eq!(tensor1.data, vec![2, 2, 2, 2]);
 let mut tensor = Tensor::new(vec![2, 2], 5);
 tensor.neg_mutate();
 assert_eq!(tensor.data, vec![-5, -5, -5, -5]);
+```
+
+### Dot product
+
+```rust
+let tensor1 = Tensor::new(vec![2, 2, 2, 2], 1.0);
+let tensor2 = Tensor::new(vec![2, 2, 2, 2], 2.0);
+let result = tensor1.dot_product(&tensor2);
+let expected: f64 = 32.0;
+assert!((result - expected).abs() < 1e-6);
+```
+
+### Euclidean distance
+
+```rust
+let tensor1 = Tensor::new(vec![2, 2, 2, 2], 1.0);
+let tensor2 = Tensor::new(vec![2, 2, 2, 2], 2.0);
+let result = tensor1.euclidean_distance(&tensor2);
+let expected: f64 = 4.0;
+assert!((result - expected).abs() < 1e-6);
+```
+
+### Cosine similarity
+
+```rust
+let tensor1 = Tensor::new(vec![2, 2, 2, 2], 1.0);
+let tensor2 = Tensor::new(vec![2, 2, 2, 2], 2.0);
+let result = tensor1.cosine_similarity(&tensor2);
+let expected: f64 = 1.0;
+assert!((result - expected).abs() < 1e-6);
 ```
 
 ### Tensor casting
