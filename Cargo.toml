@@ -2,6 +2,11 @@
 name = "tensor"
 version = "0.1.0"
 edition = "2021"
+description = "A multidimensional tensor data structure"
+keywords = ["tensor", "ndarray", "multidimensional", "data-structure"]
+categories = ["data-structures", "no-std"]
+license-file = "LICENSE"
+readme = "README.md"
 
 [dev-dependencies]
 criterion = "0.5.1"
