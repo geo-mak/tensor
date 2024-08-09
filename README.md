@@ -10,9 +10,7 @@ Multidimensional tensor implementation in Rust with focus on simplicity in terms
 - In-place modifications
 - Direct and safe indexing
 - Display formatted tensor output
-- *Similarity measures: Dot product, Euclidean distance, Cosine similarity
-
-*New features
+- (New) Similarity measures: Dot product, Euclidean distance, Cosine similarity
 
 ## Planned Features
 
