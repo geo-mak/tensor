@@ -10,17 +10,11 @@ Multidimensional tensor implementation in Rust with focus on simplicity in terms
 - In-place modifications
 - Direct and safe indexing
 - Display formatted tensor output
-- (New) Similarity measures: Dot product, Euclidean distance, Cosine similarity
-
-## Planned Features
-
-- Creating tensor from structures like vectors with auto-inference of dimensionality.
-- Quantization
-- Broadcasting
+- Similarity measures: Dot product, Euclidean distance, Cosine similarity
 
 ## Considered Features
 
-- Using SIMD for operations: SIMD in 'std::arch' is not portable across different platforms and 'Portable SIMD' in Rust is still unstable.
+- Using SIMD for operations: 'Portable SIMD' in Rust is still unstable.
 Once 'Portable SIMD' is stable, it will be considered for optimization.
 
 - Parallelization: Rayon is a good candidate for parallelization.
