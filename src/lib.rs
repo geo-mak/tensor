@@ -1,25 +1,31 @@
-pub mod casting;
+// Private modules
 mod similarity;
 
-use crate::casting::Cast;
+// Public modules
+pub mod casting;
+
+// Imports
 use std::fmt;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::ops::{
     Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign,
 };
 use std::slice::{Iter, IterMut};
 
+use crate::casting::Cast;
+
 /// A multidimensional tensor data structure.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Tensor<T> {
     data: Vec<T>,
     dimensions: Vec<usize>,
     strides: Vec<usize>,
 }
 
+// Main implementation of the `Tensor` struct
 impl<T> Tensor<T>
 where
-    T: Default + Clone + Debug + PartialEq,
+    T: Default + Clone + PartialEq,
 {
     /// Creates a new tensor with the specified dimensions and initializes all elements to a given value.
     ///
@@ -39,9 +45,12 @@ where
     /// let tensor = Tensor::new(vec![2, 3], 0);
     /// ```
     pub fn new(dimensions: Vec<usize>, initial_value: T) -> Self {
-        let size = dimensions.iter().product(); // Calculate total number of elements in the tensor.
-        let data = vec![initial_value; size]; // Create a vector filled with the initial value.
-        let strides = Self::compute_strides(&dimensions); // Compute strides
+        // Calculate total number of elements in the tensor.
+        let size = dimensions.iter().product();
+        // Create a vector filled with the initial value.
+        let data = vec![initial_value; size];
+        // Compute strides
+        let strides = Self::compute_strides(&dimensions);
         Tensor {
             data,
             dimensions,
@@ -259,10 +268,10 @@ where
     }
 }
 
-// Implement the Index trait for Tensor
+// Implement the Index trait for `Tensor`
 impl<T> Index<&[usize]> for Tensor<T>
 where
-    T: Default + Clone + Debug + PartialEq,
+    T: Default + Clone + PartialEq,
 {
     type Output = T;
 
@@ -284,7 +293,7 @@ where
 // Implement the IndexMut trait for Tensor
 impl<T> IndexMut<&[usize]> for Tensor<T>
 where
-    T: Default + Clone + Debug + PartialEq,
+    T: Default + Clone + PartialEq,
 {
     /// Retrieves a mutable reference to the value at the specified multidimensional indices using indexing syntax.
     ///
@@ -302,49 +311,10 @@ where
     }
 }
 
-impl<T> fmt::Display for Tensor<T>
-where
-    T: Default + Debug + Clone + PartialEq,
-{
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        writeln!(f, "Tensor Data:")?;
-
-        let mut indices = vec![0; self.dimensions.len()];
-        let mut ord = 1;
-
-        loop {
-            // Retrieve the value from the tensor
-            let value = self.get(&indices);
-
-            // Formatting indices as comma-separated values
-            let index_str: String = indices
-                .iter()
-                .map(|&x| x.to_string())
-                .collect::<Vec<String>>()
-                .join(",");
-
-            // Use the retrieved value in the formatting string
-            writeln!(f, "{}: [{}] -> {:?}", ord, index_str, value)?;
-
-            // Move to the next index.
-            for i in (0..self.dimensions.len()).rev() {
-                if indices[i] + 1 < self.dimensions[i] {
-                    indices[i] += 1;
-                    break;
-                } else if i == 0 {
-                    return Ok(());
-                } else {
-                    indices[i] = 0;
-                }
-            }
-            ord += 1;
-        }
-    }
-}
-
+// Implement addition for Tensor
 impl<T> Tensor<T>
 where
-    T: Clone + Debug + Add<Output = T>,
+    T: Clone + Add<Output = T>,
 {
     /// Performs element-wise addition of two tensors.
     ///
@@ -399,9 +369,10 @@ where
     }
 }
 
+// Implement subtraction for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + Debug + Sub<Output = T>,
+    T: Clone + Sub<Output = T>,
 {
     /// Performs element-wise subtraction of two tensors.
     ///
@@ -457,9 +428,10 @@ where
     }
 }
 
+// Implement multiplication for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + Debug + Mul<Output = T>,
+    T: Clone + Mul<Output = T>,
 {
     /// Performs element-wise multiplication of two tensors.
     ///
@@ -515,9 +487,10 @@ where
     }
 }
 
+// Implement division for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + Debug + PartialEq + Div<Output = T> + Default,
+    T: Clone + PartialEq + Div<Output = T> + Default,
 {
     /// Performs element-wise division of two tensors.
     ///
@@ -580,9 +553,10 @@ where
     }
 }
 
+// Implement negation for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + Debug + Neg<Output = T>,
+    T: Clone + Neg<Output = T>,
 {
     /// Performs element-wise negation of the tensor.
     ///
@@ -619,9 +593,10 @@ where
     }
 }
 
+// Implement mutable addition for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + Debug + Add<Output = T> + AddAssign,
+    T: Clone + Add<Output = T> + AddAssign,
 {
     /// Performs in-place element-wise addition of another tensor to `self`.
     ///
@@ -668,9 +643,10 @@ where
     }
 }
 
+// Implement mutable subtraction for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + Debug + Sub<Output = T> + SubAssign,
+    T: Clone + Sub<Output = T> + SubAssign,
 {
     /// Performs in-place element-wise subtraction of another tensor from `self`.
     ///
@@ -717,9 +693,10 @@ where
     }
 }
 
+// Implement mutable multiplication for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + Debug + Mul<Output = T> + MulAssign,
+    T: Clone + Mul<Output = T> + MulAssign,
 {
     /// Performs in-place element-wise multiplication of another tensor with `self`.
     ///
@@ -765,9 +742,10 @@ where
     }
 }
 
+// Implement mutable division for Tensor
 impl<T> Tensor<T>
 where
-    T: Clone + Debug + PartialEq + Default + Div<Output = T> + DivAssign,
+    T: Clone + PartialEq + Default + Div<Output = T> + DivAssign,
 {
     /// Performs in-place element-wise division of `self` by another tensor.
     ///
@@ -818,9 +796,10 @@ where
     }
 }
 
+// Implement mutable negation for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + Debug + Neg<Output = T>,
+    T: Clone + Neg<Output = T>,
 {
     /// Performs in-place negation of each element in the tensor.
     ///
@@ -849,6 +828,63 @@ where
         for a in self.data.iter_mut() {
             *a = -a.clone();
         }
+    }
+}
+
+// Implement Display for `Tensor`
+impl<T> Display for Tensor<T>
+where
+    T: Display + Default + Clone + PartialEq,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        // Get the number of dimensions of the tensor
+        let dim_len = self.dimensions.len();
+
+        // Tracking vector to keep track of the current indices
+        // Initialize with zeros: [0, 0, ..., 0]
+        let mut indices = vec![0; dim_len];
+
+        // Initialize the ordinal number of the element: 0, 1, 2, ...
+        let mut ord = 0;
+
+        loop {
+            // Get the value at the current indices
+            let value = self.get(&indices);
+
+            // Write according to the format: `ord: [indices] -> value`
+            writeln!(f, "{}: {:?} -> {}", ord, indices, value)?;
+
+            // Move to the next index
+            'inner: for i in (0..dim_len).rev() {
+                // Check if the current index can be incremented without exceeding the dimension size
+                if indices[i] + 1 < self.dimensions[i] {
+                    // Increment the current index
+                    indices[i] += 1;
+                    break 'inner;
+                } else if i == 0 {
+                    // If the first index has reached its maximum value, we are done
+                    return Ok(());
+                } else {
+                    // Reset the current index to 0 and continue to the next index
+                    indices[i] = 0;
+                }
+            }
+            ord += 1;
+        }
+    }
+}
+
+// Implement Debug for `Tensor`
+impl<T> Debug for Tensor<T>
+where
+    T: Debug + Default + Clone + PartialEq,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Tensor")
+            .field("data", &self.data)
+            .field("dimensions", &self.dimensions)
+            .field("strides", &self.strides)
+            .finish()
     }
 }
 
@@ -1046,7 +1082,14 @@ mod tests {
         assert_eq!(result_div, expected_div);
     }
 
-    // Test display output
+    #[test]
+    fn test_debug_tensor() {
+        let tensor = Tensor::new(vec![2, 2], 1);
+        let expected_output = "Tensor { data: [1, 1, 1, 1], dimensions: [2, 2], strides: [2, 1] }";
+        let debug_output = format!("{:?}", tensor);
+        assert_eq!(debug_output, expected_output);
+    }
+
     #[test]
     fn test_display_tensor_2d() {
         let mut tensor = Tensor::new(vec![2, 2], 0);
@@ -1055,11 +1098,10 @@ mod tests {
         tensor.set(&[1, 0], 3);
         tensor.set(&[1, 1], 4);
 
-        let expected_output = r#"Tensor Data:
-1: [0,0] -> 1
-2: [0,1] -> 2
-3: [1,0] -> 3
-4: [1,1] -> 4
+        let expected_output = r#"0: [0, 0] -> 1
+1: [0, 1] -> 2
+2: [1, 0] -> 3
+3: [1, 1] -> 4
 "#;
 
         let output = format!("{}", tensor);
@@ -1078,15 +1120,14 @@ mod tests {
         tensor.set(&[1, 1, 0], 7);
         tensor.set(&[1, 1, 1], 8);
 
-        let expected_output = r#"Tensor Data:
-1: [0,0,0] -> 1
-2: [0,0,1] -> 2
-3: [0,1,0] -> 3
-4: [0,1,1] -> 4
-5: [1,0,0] -> 5
-6: [1,0,1] -> 6
-7: [1,1,0] -> 7
-8: [1,1,1] -> 8
+        let expected_output = r#"0: [0, 0, 0] -> 1
+1: [0, 0, 1] -> 2
+2: [0, 1, 0] -> 3
+3: [0, 1, 1] -> 4
+4: [1, 0, 0] -> 5
+5: [1, 0, 1] -> 6
+6: [1, 1, 0] -> 7
+7: [1, 1, 1] -> 8
 "#;
 
         let output = format!("{}", tensor);

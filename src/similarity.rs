@@ -1,8 +1,15 @@
-use crate::Tensor;
 use std::ops::{Add, Mul, Sub};
+use crate::Tensor;
 
-/// A module for computing similarity metrics between tensors.
+// -------------------------------------------------------------------
+// This module contains the implementation of similarity metrics.
+// The following similarity metrics are implemented:
+// - dot_product: Dot product of two tensors.
+// - cosine_similarity: Cosine similarity between two tensors.
+// - euclidean_distance: Euclidean distance between two tensors.
+// -------------------------------------------------------------------
 
+// Implement dot product for `Tensor`
 impl<T> Tensor<T>
 where
     T: Add<Output = T> + Mul<Output = T> + Copy + Default,
@@ -34,6 +41,7 @@ where
     }
 }
 
+// Implement cosine similarity for `Tensor`
 impl<T> Tensor<T>
 where
     T: Add<Output = T> + Mul<Output = T> + Copy + Into<f64>,
@@ -91,6 +99,7 @@ where
     }
 }
 
+// Implement euclidean distance for `Tensor`
 impl<T> Tensor<T>
 where
     T: Add<Output = T> + Mul<Output = T> + Sub<Output = T> + Copy + Into<f64>,
