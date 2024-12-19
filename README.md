@@ -16,6 +16,7 @@ Multidimensional tensor implementation in Rust with focus on simplicity in terms
 
 - Using SIMD for operations: 'Portable SIMD' in Rust is still unstable.
 Once 'Portable SIMD' is stable, it will be considered for optimization.
+See [issue tracking](https://github.com/rust-lang/rust/issues/86656).
 
 - Parallelization: Rayon is a good candidate for parallelization.
 
