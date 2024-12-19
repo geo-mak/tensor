@@ -311,7 +311,7 @@ where
     /// # Parameters
     ///
     /// - `other`: A reference to another `Tensor<T>` that has the same dimensions as `self`.
-    /// The `other` tensor will be added to `self`.
+    ///   The `other` tensor will be added to `self`.
     ///
     /// # Returns
     ///
@@ -433,7 +433,7 @@ where
     /// # Parameters
     ///
     /// - `other`: A reference to another `Tensor<T>` that has the same dimensions as `self`.
-    /// The elements of `self` will be multiplied by the elements of `other`.
+    ///   The elements of `self` will be multiplied by the elements of `other`.
     ///
     /// # Returns
     /// New `Tensor<T>` that contains the result of the element-wise multiplication.
@@ -528,7 +528,7 @@ where
             .iter()
             .zip(&other.data)
             .map(|(a, b)| {
-                if b.clone() == T::default() {
+                if *b == T::default() {
                     panic!("Division by zero");
                 }
                 a.clone() / b.clone()
@@ -623,7 +623,7 @@ where
         }
 
         for (a, b) in self.data.iter_mut().zip(&other.data) {
-            *a += b.clone();
+            a.add_assign(b.clone());
         }
     }
 }
@@ -668,7 +668,7 @@ where
         }
 
         for (a, b) in self.data.iter_mut().zip(&other.data) {
-            *a -= b.clone();
+            a.sub_assign(b.clone());
         }
     }
 }
@@ -688,7 +688,7 @@ where
     /// # Parameters
     ///
     /// - `other`: A reference to another `Tensor<T>` with the same dimensions as `self`.
-    /// The elements of `other` will be multiplied with the elements of `self`.
+    ///   The elements of `other` will be multiplied with the elements of `self`.
     ///
     /// # Panics
     /// This method panics if the dimensions of `self` and `other` do not match.
@@ -714,7 +714,7 @@ where
         }
 
         for (a, b) in self.data.iter_mut().zip(&other.data) {
-            *a *= b.clone();
+            a.mul_assign(b.clone());
         }
     }
 }
@@ -762,10 +762,10 @@ where
         }
 
         for (a, b) in self.data.iter_mut().zip(&other.data) {
-            if b.clone() == T::default() {
+            if *b == T::default() {
                 panic!("Division by zero");
             }
-            *a /= b.clone();
+            a.div_assign(b.clone());
         }
     }
 }
@@ -773,7 +773,7 @@ where
 // Implement mutable negation for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + Neg<Output = T>,
+    T: Clone + Neg<Output = T> + Default,
 {
     /// Performs in-place negation of each element in the tensor.
     ///
@@ -797,7 +797,7 @@ where
     /// ```
     pub fn neg_mutate(&mut self) {
         for a in self.data.iter_mut() {
-            *a = -a.clone();
+            *a = std::mem::take(a).neg();
         }
     }
 }
