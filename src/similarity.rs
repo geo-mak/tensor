@@ -1,5 +1,5 @@
-use std::ops::{Add, Mul, Sub};
 use crate::Tensor;
+use std::ops::{Add, Mul, Sub};
 
 // -------------------------------------------------------------------
 // This module contains the implementation of similarity metrics.

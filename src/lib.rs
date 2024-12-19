@@ -2,7 +2,7 @@
 mod similarity;
 
 // Public modules
-pub mod casting;
+pub mod cast;
 
 // Imports
 use std::fmt;
@@ -10,9 +10,10 @@ use std::fmt::{Debug, Display, Formatter};
 use std::ops::{
     Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign,
 };
-use std::slice::{Iter, IterMut};
 
-use crate::casting::Cast;
+use crate::cast::error::CastError;
+use crate::cast::traits::TryCast;
+use std::slice::{Iter, IterMut};
 
 /// A multidimensional tensor data structure.
 #[derive(Clone, PartialEq)]
@@ -232,39 +233,27 @@ where
         self.data.iter_mut()
     }
 
-    /// Consumes the tensor and converts it into a `Tensor<U>`.
+    /// Attempts to cast the tensor into a tensor of a different type without consuming
+    /// the original tensor.
     ///
-    /// # Panics
-    ///
-    /// This method will panic if elements cannot be cast safely to the target type `U`.
-    pub fn into_cast<U: Cast<T>>(self) -> Tensor<U> {
-        let data: Vec<U> = self.data.into_iter().map(|value| U::cast(value)).collect();
-
-        Tensor {
-            data,
-            dimensions: self.dimensions,
-            strides: self.strides,
-        }
-    }
-
-    /// Converts a reference to the current tensor into a new `Tensor<U>`.
-    ///
-    /// # Panics
-    ///
-    /// This method will panic if elements cannot be cast safely to the target type `U`.
-    pub fn cast<U: Cast<T>>(&self) -> Tensor<U> {
+    /// # Returns
+    /// - `Ok(Tensor<U>)`: if the conversion is successful.
+    /// - `Err(CastError)`: if the conversion fails.
+    pub fn try_cast<U>(&self) -> Result<Tensor<U>, CastError>
+    where
+        T: TryCast<U>,
+    {
         let data: Vec<U> = self
             .data
             .iter()
-            .cloned()
-            .map(|value| U::cast(value))
-            .collect();
+            .map(|value| value.try_cast())
+            .collect::<Result<Vec<U>, _>>()?;
 
-        Tensor {
+        Ok(Tensor {
             data,
             dimensions: self.dimensions.clone(),
             strides: self.strides.clone(),
-        }
+        })
     }
 }
 
@@ -1055,7 +1044,9 @@ mod tests {
 
         // Create a tensor with integer numbers and attempt to cast to floating-point
         let tensor2 = Tensor::new(vec![2, 2], 2);
-        let tensor2_f64 = tensor2.cast::<f64>();
+
+        // Attempt to cast the tensor to f64
+        let tensor2_f64 = tensor2.try_cast::<f64>().unwrap();
 
         // Perform tensor operations
         let result_add = tensor1.add(&tensor2_f64);
@@ -1080,6 +1071,30 @@ mod tests {
 
         // Verify results for division
         assert_eq!(result_div, expected_div);
+    }
+
+    #[test]
+    fn test_cast_overflow() {
+        let tensor = Tensor::<u16>::new(vec![2, 2], 256);
+
+        // Attempt to cast the tensor into a tensor of u8
+        let result: Result<Tensor<u8>, CastError> = tensor.try_cast();
+
+        // Result must be an error due to overflow
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), CastError::Overflow);
+    }
+
+    #[test]
+    fn test_cast_precision_loss() {
+        let tensor = Tensor::<f32>::new(vec![2, 2], 3.14);
+
+        // Attempt to cast the tensor into a tensor of i32
+        let result: Result<Tensor<i32>, CastError> = tensor.try_cast();
+
+        // Result must be an error due to precision loss
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), CastError::PrecisionLoss);
     }
 
     #[test]

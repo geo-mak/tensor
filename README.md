@@ -198,9 +198,10 @@ assert!((result - expected).abs() < 1e-6);
 ```
 
 ### Tensor casting
-Casting to another type can be performed using the 'into_cast' (Consuming) and 'cast' (Non-Consuming) methods. 
-The casting process relies on the 'Cast' trait, which must be implemented for all target types. 
-Types that implement the 'Cast' trait must ensure that casting does not result in precision loss, overflow, or undefined behavior.
+Casting to another type can be performed using the 'try_cast' method.
+The casting process relies on the 'TryCast' trait, which the source type must implement.
+Casting using 'TryCast' trait can fail if the casting process results in precision loss, overflow, or undefined behavior.
+A blanket implementation of 'TryCast' is provided for all numeric types that can be cast to each other without loss of precision.
 
 ```rust
 // Create a tensor with floating-point numbers
@@ -208,7 +209,7 @@ let tensor1 = Tensor::new(vec![2, 2], 1.0);
 
 // Create a tensor with integer numbers and cast to floating-point
 let tensor2 = Tensor::new(vec![2, 2], 2);
-let tensor2_float = tensor2.cast::<f64>(); // Explicit casting to f64, but it can be done implicitly
+let tensor2_float = tensor2.try_cast::<f64>().unwrap();
 
 // Perform tensor operations
 let result_add = tensor1.add(&tensor2_float);
