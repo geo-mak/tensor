@@ -28,7 +28,8 @@ impl<T> Tensor<T>
 where
     T: Default + Clone + PartialEq,
 {
-    /// Creates a new tensor with the specified dimensions and initializes all elements to a given value.
+    /// Creates a new tensor with the specified dimensions and initializes all elements to a
+    /// given value.
     ///
     /// # Parameters
     ///
@@ -36,8 +37,7 @@ where
     /// - `initial_value`: The value to initialize all elements of the tensor.
     ///
     /// # Returns
-    ///
-    /// Returns an instance of `Tensor<T>`.
+    /// An instance of `Tensor<T>`.
     ///
     /// # Example
     ///
@@ -72,16 +72,15 @@ where
     ///
     /// # Parameters
     ///
-    /// - `indices`: A slice of `usize` values representing the indices in each dimension of the tensor.
+    /// - `indices`: A slice of `usize` values representing the indices in each dimension of the
+    ///   tensor.
     ///
     /// # Returns
-    ///
-    /// Returns a `usize` value which is the computed linear index in the flattened data vector.
+    /// A `usize` value which is the computed linear index in the flattened data vector.
     ///
     /// # Panics
-    ///
-    /// This function will panic if the number of indices provided does not match the number of dimensions of the tensor.
-    /// It will also panic if any of the indices are out of bounds.
+    /// This method will panic if the number of indices provided does not match the number of
+    /// dimensions of the tensor.
     #[inline]
     fn linear_index(&self, indices: &[usize]) -> usize {
         if indices.len() != self.dimensions.len() {
@@ -102,13 +101,11 @@ where
     /// - `indices`: A slice of indices specifying the position in each dimension.
     ///
     /// # Panics
-    ///
-    /// This function will panic if the number of indices provided does not match the number of dimensions of the tensor.
-    /// It will also panic if any of the indices are out of bounds.
+    /// This method will panic if the number of indices provided does not match the number of
+    /// dimensions of the tensor. It will panic also if any of the indices are out of bounds.
     ///
     /// # Returns
-    ///
-    /// Returns a reference to the value at the specified indices.
+    /// A reference to the value at the specified indices.
     #[inline]
     pub fn get(&self, indices: &[usize]) -> &T {
         &self.data[self.linear_index(indices)]
@@ -122,9 +119,8 @@ where
     /// - `value`: The value to set at the specified indices.
     ///
     /// # Panics
-    ///
-    /// This function will panic if the number of indices provided does not match the number of dimensions of the tensor.
-    /// It will also panic if any of the indices are out of bounds.
+    /// This method will panic if the number of indices provided does not match the number of
+    /// dimensions of the tensor. It will panic also if any of the indices are out of bounds.
     #[inline]
     pub fn set(&mut self, indices: &[usize], value: T) {
         let idx = self.linear_index(indices);
@@ -134,7 +130,6 @@ where
     /// Returns the shape (dimensions) of the tensor.
     ///
     /// # Returns
-    ///
     /// Returns a slice of `usize` representing the size of each dimension of the tensor.
     #[inline]
     pub fn shape(&self) -> &[usize] {
@@ -148,22 +143,23 @@ where
     /// - `dimensions`: A vector specifying the new size of each dimension.
     ///
     /// # Panics
-    ///
-    /// This method will panic if the new dimensions do not match the number of elements in the tensor.
+    /// This method will panic if the new dimensions do not match the number of elements in the
+    /// tensor.
     pub fn reshape(&mut self, dimensions: Vec<usize>) {
-        let new_size: usize = dimensions.iter().product(); // Calculate total number of elements for new dimensions.
+        // Calculate total number of elements for new dimensions.
+        let new_size: usize = dimensions.iter().product();
         if new_size != self.data.len() {
             panic!("New dimensions must have the same number of elements")
         }
         self.strides = Self::compute_strides(&dimensions);
-        self.dimensions = dimensions; // Update dimensions to new values.
+        // Update dimensions to new values.
+        self.dimensions = dimensions;
     }
 
     /// Checks if the tensor is empty.
     ///
     /// # Returns
-    ///
-    /// Returns `true` if the tensor has no elements, `false` otherwise.
+    /// `true` if the tensor has no elements, `false` otherwise.
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
@@ -176,8 +172,7 @@ where
     /// `2 * 3 * 4 = 24` elements.
     ///
     /// # Returns
-    ///
-    /// Returns the total number of elements as a `usize`.
+    /// The total number of elements as a `usize`.
     ///
     /// # Example
     ///
@@ -205,8 +200,7 @@ where
     /// - `dim_index`: The index of the dimension (0-based) for which to get the size.
     ///
     /// # Returns
-    ///
-    /// Returns the number of elements along the specified dimension.
+    /// The number of elements along the specified dimension.
     ///
     /// # Example
     ///
@@ -223,11 +217,13 @@ where
         self.dimensions.get(dim_index).copied().unwrap_or(0)
     }
 
+    /// Returns an iterator over the elements of the tensor.
     #[inline]
     pub fn iter(&self) -> Iter<T> {
         self.data.iter()
     }
 
+    /// Returns a mutable iterator over the elements of the tensor.
     #[inline]
     pub fn iter_mut(&mut self) -> IterMut<'_, T> {
         self.data.iter_mut()
@@ -264,15 +260,15 @@ where
 {
     type Output = T;
 
-    /// Retrieves a reference to the value at the specified multidimensional indices using indexing syntax.
+    /// Retrieves a reference to the value at the specified multidimensional indices using
+    /// indexing syntax.
     ///
     /// # Parameters
     ///
     /// - `indices`: A slice of indices specifying the position in each dimension.
     ///
     /// # Returns
-    ///
-    /// Returns a reference to the value at the specified indices.
+    /// A reference to the value at the specified indices.
     #[inline]
     fn index(&self, indices: &[usize]) -> &Self::Output {
         &self.data[self.linear_index(indices)]
@@ -284,7 +280,8 @@ impl<T> IndexMut<&[usize]> for Tensor<T>
 where
     T: Default + Clone + PartialEq,
 {
-    /// Retrieves a mutable reference to the value at the specified multidimensional indices using indexing syntax.
+    /// Retrieves a mutable reference to the value at the specified multidimensional indices
+    /// using indexing syntax.
     ///
     /// # Parameters
     ///
@@ -308,11 +305,13 @@ where
     /// Performs element-wise addition of two tensors.
     ///
     /// This method adds two tensors of the same dimensions, element by element.
-    /// The resulting tensor will have the same dimensions and strides as the original tensors, with each element being the sum of the corresponding elements from the two tensors.
+    /// The resulting tensor will have the same dimensions and strides as the original tensors,
+    /// with each element being the sum of the corresponding elements from the two tensors.
     ///
     /// # Parameters
     ///
-    /// - `other`: A reference to another `Tensor<T>` that has the same dimensions as `self`. The `other` tensor will be added to `self`.
+    /// - `other`: A reference to another `Tensor<T>` that has the same dimensions as `self`.
+    /// The `other` tensor will be added to `self`.
     ///
     /// # Returns
     ///
@@ -365,8 +364,11 @@ where
 {
     /// Performs element-wise subtraction of two tensors.
     ///
-    /// This method subtracts the elements of one tensor from the corresponding elements of another tensor.
-    /// Both tensors must have the same dimensions for the subtraction to be performed. The resulting tensor will have the same dimensions and strides as the original tensors, with each element being the result of subtracting the corresponding elements of the `other` tensor from `self`.
+    /// This method subtracts the elements of one tensor from the corresponding elements of another
+    /// tensor. Both tensors must have the same dimensions for the subtraction to be performed.
+    /// The resulting tensor will have the same dimensions and strides as the original tensors,
+    /// with each element being the result of subtracting the corresponding elements of the `other`
+    /// tensor from `self`.
     ///
     /// # Parameters
     ///
@@ -374,13 +376,11 @@ where
     ///   The elements of `self` will be subtracted by the elements of `other`.
     ///
     /// # Returns
-    ///
-    /// Returns a new `Tensor<T>` that contains the result of the element-wise subtraction.
+    /// New `Tensor<T>` that contains the result of the element-wise subtraction.
     /// The new tensor will have the same dimensions and strides as `self` and `other`.
     ///
     /// # Panics
-    ///
-    /// Panics if the dimensions of `self` and `other` do not match.
+    /// If the dimensions of `self` and `other` do not match.
     ///
     /// # Example
     ///
@@ -424,22 +424,23 @@ where
 {
     /// Performs element-wise multiplication of two tensors.
     ///
-    /// This method multiplies the elements of one tensor with the corresponding elements of another tensor.
-    /// Both tensors must have the same dimensions for the multiplication to be performed.
-    /// The resulting tensor will have the same dimensions and strides as the original tensors, with each element being the result of multiplying the corresponding elements of `self` and `other`.
+    /// This method multiplies the elements of one tensor with the corresponding elements of
+    /// another tensor. Both tensors must have the same dimensions for the multiplication to be
+    /// performed. The resulting tensor will have the same dimensions and strides as the original
+    /// tensors, with each element being the result of multiplying the corresponding elements of
+    /// `self` and `other`.
     ///
     /// # Parameters
     ///
-    /// - `other`: A reference to another `Tensor<T>` that has the same dimensions as `self`. The elements of `self` will be multiplied by the elements of `other`.
+    /// - `other`: A reference to another `Tensor<T>` that has the same dimensions as `self`.
+    /// The elements of `self` will be multiplied by the elements of `other`.
     ///
     /// # Returns
-    ///
-    /// Returns a new `Tensor<T>` that contains the result of the element-wise multiplication.
+    /// New `Tensor<T>` that contains the result of the element-wise multiplication.
     /// The new tensor will have the same dimensions and strides as `self` and `other`.
     ///
     /// # Panics
-    ///
-    /// Panics if the dimensions of `self` and `other` do not match.
+    /// If the dimensions of `self` and `other` do not match.
     ///
     /// # Example
     ///
@@ -483,9 +484,11 @@ where
 {
     /// Performs element-wise division of two tensors.
     ///
-    /// This method divides the elements of one tensor by the corresponding elements of another tensor.
-    /// Both tensors must have the same dimensions for the division to be performed.
-    /// The resulting tensor will have the same dimensions and strides as the original tensors, with each element being the result of dividing the elements of `self` by the elements of `other`.
+    /// This method divides the elements of one tensor by the corresponding elements of another
+    /// tensor. Both tensors must have the same dimensions for the division to be performed.
+    /// The resulting tensor will have the same dimensions and strides as the original tensors,
+    /// with each element being the result of dividing the elements of `self` by the elements of
+    /// `other`.
     ///
     /// # Parameters
     ///
@@ -493,14 +496,12 @@ where
     ///   The elements of `self` will be divided by the elements of `other`.
     ///
     /// # Returns
-    ///
-    /// Returns a new `Tensor<T>` that contains the result of the element-wise division.
+    /// New `Tensor<T>` that contains the result of the element-wise division.
     /// The new tensor will have the same dimensions and strides as `self` and `other`.
     ///
     /// # Panics
-    ///
-    /// Panics if the dimensions of `self` and `other` do not match.
-    /// Additionally, it will panic if any element of `other` is zero, as division by zero is not allowed.
+    /// This method will panic if the dimensions of `self` and `other` do not match. Additionally,
+    /// it will panic if any element of `other` is zero, as division by zero is not allowed.
     ///
     /// # Example
     ///
@@ -549,13 +550,13 @@ where
 {
     /// Performs element-wise negation of the tensor.
     ///
-    /// This method negates each element of the tensor, resulting in a new tensor where each element is the negation of the corresponding element in the original tensor.
-    /// The resulting tensor will have the same dimensions and strides as the original tensor.
+    /// This method negates each element of the tensor, resulting in a new tensor where each
+    /// element is the negation of the corresponding element in the original tensor. The resulting
+    /// tensor will have the same dimensions and strides as the original tensor.
     ///
     /// # Returns
-    ///
-    /// Returns a new `Tensor<T>` where each element is the negated value of the corresponding element in `self`.
-    /// The new tensor will have the same dimensions and strides as `self`.
+    /// New `Tensor<T>` where each element is the negated value of the corresponding element
+    /// in `self`. The new tensor will have the same dimensions and strides as `self`.
     ///
     /// # Example
     ///
@@ -589,22 +590,17 @@ where
 {
     /// Performs in-place element-wise addition of another tensor to `self`.
     ///
-    /// This method adds the elements of the provided tensor to the corresponding elements of the tensor on which it is called.
-    /// The operation is performed in-place, modifying `self` directly.
-    /// Both tensors must have the same dimensions for the addition to be valid.
+    /// This method adds the elements of the provided tensor to the corresponding elements of the
+    /// tensor on which it is called. The operation is performed in-place, modifying `self`
+    /// directly. Both tensors must have the same dimensions for the addition to be valid.
     ///
     /// # Parameters
     ///
     /// - `other`: A reference to another `Tensor<T>` with the same dimensions as `self`.
     ///   This tensor will be added to the elements of `self`.
     ///
-    /// # Returns
-    ///
-    /// This method does not return any value. The result of the addition is stored in `self`, modifying it directly.
-    ///
     /// # Panics
-    ///
-    /// Panics if the dimensions of `self` and `other` do not match.
+    /// This method panics if the dimensions of `self` and `other` do not match.
     ///
     /// # Example
     ///
@@ -639,22 +635,17 @@ where
 {
     /// Performs in-place element-wise subtraction of another tensor from `self`.
     ///
-    /// This method subtracts the elements of the provided tensor from the corresponding elements of the tensor on which it is called.
-    /// The operation is performed in-place, modifying `self` directly.
-    /// Both tensors must have the same dimensions for the subtraction to be valid.
+    /// This method subtracts the elements of the provided tensor from the corresponding elements
+    /// of the tensor on which it is called. The operation is performed in-place, modifying `self`
+    /// directly. Both tensors must have the same dimensions for the subtraction to be valid.
     ///
     /// # Parameters
     ///
     /// - `other`: A reference to another `Tensor<T>` with the same dimensions as `self`.
     ///   The elements of `other` will be subtracted from the elements of `self`.
     ///
-    /// # Returns
-    ///
-    /// This method does not return any value. The result of the subtraction is stored in `self`, modifying it directly.
-    ///
     /// # Panics
-    ///
-    /// Panics if the dimensions of `self` and `other` do not match.
+    /// This method panics if the dimensions of `self` and `other` do not match.
     ///
     /// # Example
     ///
@@ -689,21 +680,18 @@ where
 {
     /// Performs in-place element-wise multiplication of another tensor with `self`.
     ///
-    /// This method multiplies each element of the provided tensor with the corresponding element of the tensor on which it is called.
-    /// The operation is performed in-place, meaning `self` is directly modified to store the results.
-    /// Both tensors must have the same dimensions for the multiplication to be valid.
+    /// This method multiplies each element of the provided tensor with the corresponding element
+    /// of the tensor on which it is called. The operation is performed in-place, meaning `self` is
+    /// directly modified to store the results. Both tensors must have the same dimensions for the
+    /// multiplication to be valid.
     ///
     /// # Parameters
     ///
-    /// - `other`: A reference to another `Tensor<T>` with the same dimensions as `self`. The elements of `other` will be multiplied with the elements of `self`.
-    ///
-    /// # Returns
-    ///
-    /// This method does not return any value. The result of the multiplication is stored in `self`, modifying it directly.
+    /// - `other`: A reference to another `Tensor<T>` with the same dimensions as `self`.
+    /// The elements of `other` will be multiplied with the elements of `self`.
     ///
     /// # Panics
-    ///
-    /// Panics if the dimensions of `self` and `other` do not match.
+    /// This method panics if the dimensions of `self` and `other` do not match.
     ///
     /// # Example
     ///
@@ -738,23 +726,20 @@ where
 {
     /// Performs in-place element-wise division of `self` by another tensor.
     ///
-    /// This method divides each element of `self` by the corresponding element of the provided tensor, modifying `self` directly with the results.
-    /// The operation is performed in-place, meaning that `self` will be updated to contain the results of the division.
-    /// Both tensors must have the same dimensions for the division to be valid.
+    /// This method divides each element of `self` by the corresponding element of the provided
+    /// tensor, modifying `self` directly with the results. The operation is performed in-place,
+    /// meaning that `self` will be updated to contain the results of the division. Both tensors
+    /// must have the same dimensions for the division to be valid.
     ///
     /// # Parameters
     ///
     /// - `other`: A reference to another `Tensor<T>` with the same dimensions as `self`.
     ///   The elements of `self` will be divided by the corresponding elements of `other`.
     ///
-    /// # Returns
-    ///
-    /// This method does not return any value. The result of the division is stored in `self`, modifying it directly.
-    ///
     /// # Panics
-    ///
-    /// - Panics if the dimensions of `self` and `other` do not match. Both tensors must have the same dimensions for the division to be performed.
-    /// - Panics if any element of `other` is zero, as division by zero is not allowed.
+    /// - If the dimensions of `self` and `other` do not match.
+    ///   Both tensors must have the same dimensions for the division to be performed.
+    /// - If any element of `other` is zero, as division by zero is not allowed.
     ///
     /// # Example
     ///
@@ -792,12 +777,9 @@ where
 {
     /// Performs in-place negation of each element in the tensor.
     ///
-    /// This method negates each element of `self` in-place, modifying `self` directly with the results.
-    /// The negation is applied to every element in the tensor, meaning that `self` will be updated to contain the negated values of its original elements.
-    ///
-    /// # Returns
-    ///
-    /// This method does not return any value. The result of the negation is stored in `self`, modifying it directly.
+    /// This method negates each element of `self` in-place, modifying `self` directly with
+    /// the results. The negation is applied to every element in the tensor, meaning that `self`
+    /// will be updated to contain the negated values of its original elements.
     ///
     /// # Example
     ///
