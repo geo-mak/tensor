@@ -148,15 +148,16 @@ where
     /// # Panics
     /// This method will panic if the new dimensions do not match the number of elements in the
     /// tensor.
-    pub fn reshape(&mut self, dimensions: Vec<usize>) {
+    pub fn reshape(&mut self, dimensions: &[usize]) {
         // Calculate total number of elements for new dimensions.
         let new_size: usize = dimensions.iter().product();
         if new_size != self.data.len() {
-            panic!("New dimensions must have the same number of elements")
+            panic!("New dimensions must have the same number of elements");
         }
         self.strides = Self::compute_strides(&dimensions);
         // Update dimensions to new values.
-        self.dimensions = dimensions;
+        self.dimensions.clear();
+        self.dimensions.extend_from_slice(dimensions);
     }
 
     /// Checks if the tensor is empty.
@@ -217,7 +218,10 @@ where
     /// ```
     #[inline]
     pub fn dim_len(&self, dim_index: usize) -> usize {
-        self.dimensions.get(dim_index).copied().unwrap_or(0)
+        match self.dimensions.get(dim_index) {
+            Some(&len) => len,
+            None => 0,
+        }
     }
 
     /// Returns an iterator over the elements of the tensor.
@@ -924,7 +928,7 @@ mod tests {
         tensor.set(&[1, 1], 5);
         tensor.set(&[1, 2], 6);
 
-        tensor.reshape(vec![3, 2]);
+        tensor.reshape(&[3, 2]);
         assert_eq!(tensor.shape(), &[3, 2]);
 
         assert_eq!(tensor.get(&[0, 0]), &1);

@@ -60,7 +60,7 @@ tensor.set(&[1, 0], 4);
 tensor.set(&[1, 1], 5);
 tensor.set(&[1, 2], 6);
 
-tensor.reshape(vec![3, 2]);
+tensor.reshape(&[3, 2]);
 assert_eq!(tensor.shape(), &[3, 2]);
 
 assert_eq!(tensor.get(&[0, 0]), &1);
