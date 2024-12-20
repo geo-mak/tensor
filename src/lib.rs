@@ -23,10 +23,13 @@ pub struct Tensor<T> {
     strides: Vec<usize>,
 }
 
-// Main implementation of the `Tensor` struct
+//////////////////////////////////////////////////////////////////////
+// Core implementation for `Tensor`
+//////////////////////////////////////////////////////////////////////
+
 impl<T> Tensor<T>
 where
-    T: Default + Clone + PartialEq,
+    T: Copy,
 {
     /// Creates a new tensor with the specified dimensions and initializes all elements to a
     /// given value.
@@ -130,7 +133,7 @@ where
     /// Returns the shape (dimensions) of the tensor.
     ///
     /// # Returns
-    /// Returns a slice of `usize` representing the size of each dimension of the tensor.
+    /// A slice of `usize` representing the size of each dimension of the tensor.
     #[inline]
     pub fn shape(&self) -> &[usize] {
         &self.dimensions
@@ -256,7 +259,7 @@ where
 // Implement the Index trait for `Tensor`
 impl<T> Index<&[usize]> for Tensor<T>
 where
-    T: Default + Clone + PartialEq,
+    T: Copy,
 {
     type Output = T;
 
@@ -278,7 +281,7 @@ where
 // Implement the IndexMut trait for Tensor
 impl<T> IndexMut<&[usize]> for Tensor<T>
 where
-    T: Default + Clone + PartialEq,
+    T: Copy,
 {
     /// Retrieves a mutable reference to the value at the specified multidimensional indices
     /// using indexing syntax.
@@ -297,10 +300,14 @@ where
     }
 }
 
+//////////////////////////////////////////////////////////////////////
+// Immutable operations for `Tensor`
+//////////////////////////////////////////////////////////////////////
+
 // Implement addition for Tensor
 impl<T> Tensor<T>
 where
-    T: Clone + Add<Output = T>,
+    T: Copy + Add<Output = T>,
 {
     /// Performs element-wise addition of two tensors.
     ///
@@ -346,7 +353,7 @@ where
             .data
             .iter()
             .zip(&other.data)
-            .map(|(a, b)| a.clone() + b.clone())
+            .map(|(a, b)| *a + *b)
             .collect();
 
         Tensor {
@@ -360,7 +367,7 @@ where
 // Implement subtraction for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + Sub<Output = T>,
+    T: Copy + Sub<Output = T>,
 {
     /// Performs element-wise subtraction of two tensors.
     ///
@@ -406,7 +413,7 @@ where
             .data
             .iter()
             .zip(&other.data)
-            .map(|(a, b)| a.clone() - b.clone())
+            .map(|(a, b)| *a - *b)
             .collect();
 
         Tensor {
@@ -420,7 +427,7 @@ where
 // Implement multiplication for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + Mul<Output = T>,
+    T: Copy + Mul<Output = T>,
 {
     /// Performs element-wise multiplication of two tensors.
     ///
@@ -466,7 +473,7 @@ where
             .data
             .iter()
             .zip(&other.data)
-            .map(|(a, b)| a.clone() * b.clone())
+            .map(|(a, b)| *a * *b)
             .collect();
 
         Tensor {
@@ -480,7 +487,7 @@ where
 // Implement division for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + PartialEq + Div<Output = T> + Default,
+    T: Copy + Default + PartialEq + Div<Output = T>,
 {
     /// Performs element-wise division of two tensors.
     ///
@@ -523,15 +530,17 @@ where
             panic!("Tensors must have the same dimensions for division");
         }
 
+        let default_value = T::default();
+
         let data: Vec<T> = self
             .data
             .iter()
             .zip(&other.data)
             .map(|(a, b)| {
-                if *b == T::default() {
+                if *b == default_value {
                     panic!("Division by zero");
                 }
-                a.clone() / b.clone()
+                *a / *b
             })
             .collect();
 
@@ -546,7 +555,7 @@ where
 // Implement negation for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + Neg<Output = T>,
+    T: Copy + Neg<Output = T>,
 {
     /// Performs element-wise negation of the tensor.
     ///
@@ -573,7 +582,7 @@ where
     /// assert_eq!(result.get(&[1, 2]), &-1); // Negation of 1
     /// ```
     pub fn neg(&self) -> Tensor<T> {
-        let data: Vec<T> = self.data.iter().map(|a| -a.clone()).collect();
+        let data: Vec<T> = self.data.iter().map(|a| -*a).collect();
 
         Tensor {
             data,
@@ -583,10 +592,14 @@ where
     }
 }
 
+//////////////////////////////////////////////////////////////////////
+// Mutable operations for `Tensor`
+//////////////////////////////////////////////////////////////////////
+
 // Implement mutable addition for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + Add<Output = T> + AddAssign,
+    T: Copy + AddAssign,
 {
     /// Performs in-place element-wise addition of another tensor to `self`.
     ///
@@ -623,7 +636,7 @@ where
         }
 
         for (a, b) in self.data.iter_mut().zip(&other.data) {
-            a.add_assign(b.clone());
+            *a += *b;
         }
     }
 }
@@ -631,7 +644,7 @@ where
 // Implement mutable subtraction for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + Sub<Output = T> + SubAssign,
+    T: Copy + SubAssign,
 {
     /// Performs in-place element-wise subtraction of another tensor from `self`.
     ///
@@ -668,7 +681,7 @@ where
         }
 
         for (a, b) in self.data.iter_mut().zip(&other.data) {
-            a.sub_assign(b.clone());
+            *a -= *b;
         }
     }
 }
@@ -676,7 +689,7 @@ where
 // Implement mutable multiplication for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + Mul<Output = T> + MulAssign,
+    T: Copy + MulAssign,
 {
     /// Performs in-place element-wise multiplication of another tensor with `self`.
     ///
@@ -714,7 +727,7 @@ where
         }
 
         for (a, b) in self.data.iter_mut().zip(&other.data) {
-            a.mul_assign(b.clone());
+            *a *= *b;
         }
     }
 }
@@ -722,7 +735,7 @@ where
 // Implement mutable division for Tensor
 impl<T> Tensor<T>
 where
-    T: Clone + PartialEq + Default + Div<Output = T> + DivAssign,
+    T: Copy + Default + PartialEq + DivAssign,
 {
     /// Performs in-place element-wise division of `self` by another tensor.
     ///
@@ -761,11 +774,13 @@ where
             panic!("Tensors must have the same dimensions for division");
         }
 
+        let default_value = T::default();
+
         for (a, b) in self.data.iter_mut().zip(&other.data) {
-            if *b == T::default() {
+            if *b == default_value {
                 panic!("Division by zero");
             }
-            a.div_assign(b.clone());
+            *a /= *b;
         }
     }
 }
@@ -773,7 +788,7 @@ where
 // Implement mutable negation for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Clone + Neg<Output = T> + Default,
+    T: Copy + Neg<Output = T>,
 {
     /// Performs in-place negation of each element in the tensor.
     ///
@@ -797,15 +812,33 @@ where
     /// ```
     pub fn neg_mutate(&mut self) {
         for a in self.data.iter_mut() {
-            *a = std::mem::take(a).neg();
+            *a = -*a;
         }
+    }
+}
+
+//////////////////////////////////////////////////////////////////////
+// Display and Debug implementations for `Tensor`
+//////////////////////////////////////////////////////////////////////
+
+// Implement Debug for `Tensor`
+impl<T> Debug for Tensor<T>
+where
+    T: Debug,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Tensor")
+            .field("data", &self.data)
+            .field("dimensions", &self.dimensions)
+            .field("strides", &self.strides)
+            .finish()
     }
 }
 
 // Implement Display for `Tensor`
 impl<T> Display for Tensor<T>
 where
-    T: Display + Default + Clone + PartialEq,
+    T: Copy + Display,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         // Get the number of dimensions of the tensor
@@ -842,20 +875,6 @@ where
             }
             ord += 1;
         }
-    }
-}
-
-// Implement Debug for `Tensor`
-impl<T> Debug for Tensor<T>
-where
-    T: Debug + Default + Clone + PartialEq,
-{
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Tensor")
-            .field("data", &self.data)
-            .field("dimensions", &self.dimensions)
-            .field("strides", &self.strides)
-            .finish()
     }
 }
 
