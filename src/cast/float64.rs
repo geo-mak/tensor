@@ -1,9 +1,10 @@
 use crate::cast::error::CastError;
 use crate::cast::traits::TryCast;
 
-//-------------------------------------------------
+//////////////////////////////////////////////////////////////////////
 // Cast implementations for f64
-//-------------------------------------------------
+//////////////////////////////////////////////////////////////////////
+
 impl TryCast<u8> for f64 {
     fn try_cast(&self) -> Result<u8, CastError> {
         if *self < 0.0 || *self > u8::MAX as f64 {
