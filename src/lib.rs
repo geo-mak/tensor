@@ -78,12 +78,12 @@ where
     /// - `indices`: A slice of `usize` values representing the indices in each dimension of the
     ///   tensor.
     ///
-    /// # Returns
-    /// A `usize` value which is the computed linear index in the flattened data vector.
-    ///
     /// # Panics
     /// This method will panic if the number of indices provided does not match the number of
     /// dimensions of the tensor.
+    ///
+    /// # Returns
+    /// A `usize` value which is the computed linear index in the flattened data vector.
     #[inline]
     fn linear_index(&self, indices: &[usize]) -> usize {
         if indices.len() != self.dimensions.len() {
@@ -270,6 +270,10 @@ where
     ///
     /// - `indices`: A slice of indices specifying the position in each dimension.
     ///
+    /// # Panics
+    /// This method will panic if the number of indices provided does not match the number of
+    /// dimensions of the tensor. It will panic also if any of the indices are out of bounds.
+    ///
     /// # Returns
     /// A reference to the value at the specified indices.
     #[inline]
@@ -290,9 +294,12 @@ where
     ///
     /// - `indices`: A slice of indices specifying the position in each dimension.
     ///
-    /// # Returns
+    /// # Panics
+    /// This method will panic if the number of indices provided does not match the number of
+    /// dimensions of the tensor. It will panic also if any of the indices are out of bounds.
     ///
-    /// Returns a mutable reference to the value at the specified indices.
+    /// # Returns
+    /// A mutable reference to the value at the specified indices.
     #[inline]
     fn index_mut(&mut self, indices: &[usize]) -> &mut Self::Output {
         let idx = self.linear_index(indices);
@@ -320,14 +327,12 @@ where
     /// - `other`: A reference to another `Tensor<T>` that has the same dimensions as `self`.
     ///   The `other` tensor will be added to `self`.
     ///
-    /// # Returns
-    ///
-    /// Returns a new `Tensor<T>` that contains the result of the element-wise addition.
-    /// This new tensor will have the same dimensions and strides as `self` and `other`.
-    ///
     /// # Panics
+    /// This method will panic if the dimensions of `self` and `other` do not match.
     ///
-    /// Panics if the dimensions of `self` and `other` do not match.
+    /// # Returns
+    /// New `Tensor<T>` that contains the result of the element-wise addition.
+    /// This new tensor will have the same dimensions and strides as `self` and `other`.
     ///
     /// # Example
     ///
@@ -382,12 +387,12 @@ where
     /// - `other`: A reference to another `Tensor<T>` that has the same dimensions as `self`.
     ///   The elements of `self` will be subtracted by the elements of `other`.
     ///
+    /// # Panics
+    /// This method will panic if the dimensions of `self` and `other` do not match.
+    ///
     /// # Returns
     /// New `Tensor<T>` that contains the result of the element-wise subtraction.
     /// The new tensor will have the same dimensions and strides as `self` and `other`.
-    ///
-    /// # Panics
-    /// If the dimensions of `self` and `other` do not match.
     ///
     /// # Example
     ///
@@ -442,12 +447,12 @@ where
     /// - `other`: A reference to another `Tensor<T>` that has the same dimensions as `self`.
     ///   The elements of `self` will be multiplied by the elements of `other`.
     ///
+    /// # Panics
+    /// This method will panic if the dimensions of `self` and `other` do not match.
+    ///
     /// # Returns
     /// New `Tensor<T>` that contains the result of the element-wise multiplication.
     /// The new tensor will have the same dimensions and strides as `self` and `other`.
-    ///
-    /// # Panics
-    /// If the dimensions of `self` and `other` do not match.
     ///
     /// # Example
     ///
@@ -502,13 +507,13 @@ where
     /// - `other`: A reference to another `Tensor<T>` that has the same dimensions as `self`.
     ///   The elements of `self` will be divided by the elements of `other`.
     ///
-    /// # Returns
-    /// New `Tensor<T>` that contains the result of the element-wise division.
-    /// The new tensor will have the same dimensions and strides as `self` and `other`.
-    ///
     /// # Panics
     /// This method will panic if the dimensions of `self` and `other` do not match. Additionally,
     /// it will panic if any element of `other` is zero, as division by zero is not allowed.
+    ///
+    /// # Returns
+    /// New `Tensor<T>` that contains the result of the element-wise division.
+    /// The new tensor will have the same dimensions and strides as `self` and `other`.
     ///
     /// # Example
     ///
@@ -750,9 +755,8 @@ where
     ///   The elements of `self` will be divided by the corresponding elements of `other`.
     ///
     /// # Panics
-    /// - If the dimensions of `self` and `other` do not match.
-    ///   Both tensors must have the same dimensions for the division to be performed.
-    /// - If any element of `other` is zero, as division by zero is not allowed.
+    /// This method will panic if the dimensions of `self` and `other` do not match. Additionally,
+    /// it will panic if any element of `other` is zero, as division by zero is not allowed.
     ///
     /// # Example
     ///
