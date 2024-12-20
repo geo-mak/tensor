@@ -1,6 +1,10 @@
 # Tensor
 
-Multidimensional tensor implementation in Rust with focus on simplicity in terms of usage and implementation. 
+Multidimensional tensor implementation in Rust with focus on simplicity in terms of usage and implementation.
+
+Created as a test environment for numerical stuff in Rust and their hardware-based acceleration and optimization techniques.
+
+Currently, only CPU-based operations are supported without fancy optimizations and accelerations.
 
 ## Features
 
