@@ -296,7 +296,7 @@ where
     type Output = T;
 
     /// Retrieves a reference to the value at the specified multidimensional indices using
-    /// indexing syntax.
+    /// indexing preprocessing.
     ///
     /// # Parameters
     ///
@@ -320,7 +320,7 @@ where
     T: Copy,
 {
     /// Retrieves a mutable reference to the value at the specified multidimensional indices
-    /// using indexing syntax.
+    /// using indexing preprocessing.
     ///
     /// # Parameters
     ///

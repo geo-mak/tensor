@@ -18,8 +18,8 @@ name = "benchmarks"
 harness = false
 
 [dependencies]
-tensor_macro = {path = "tensor_macro", optional = true}
+preprocessing = {path = "preprocessing", optional = true}
 
 [features]
-builder = ["tensor_macro"]
+builder = ["preprocessing"]
 all = ["builder"]
