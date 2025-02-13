@@ -1,6 +1,6 @@
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-
 use crate::Tensor;
+use crate::assertions::assert_same_dimensions;
 
 //////////////////////////////////////////////////////////////////////
 // Immutable operations for `Tensor`
@@ -45,10 +45,7 @@ where
     /// assert_eq!(result.get(&[1, 2]), &3); // 1 + 2
     /// ```
     pub fn add(&self, other: &Tensor<T>) -> Self {
-        if self.dimensions != other.dimensions {
-            panic!("Tensors must have the same dimensions for addition");
-        }
-
+        assert_same_dimensions(self, other);
         let data: Vec<T> = self
             .data
             .iter()
@@ -105,10 +102,7 @@ where
     /// assert_eq!(result.get(&[1, 2]), &2); // 5 - 3
     /// ```
     pub fn sub(&self, other: &Tensor<T>) -> Tensor<T> {
-        if self.dimensions != other.dimensions {
-            panic!("Tensors must have the same dimensions for subtraction");
-        }
-
+        assert_same_dimensions(self, other);
         let data: Vec<T> = self
             .data
             .iter()
@@ -165,10 +159,7 @@ where
     /// assert_eq!(result.get(&[1, 2]), &6); // 2 * 3
     /// ```
     pub fn mul(&self, other: &Tensor<T>) -> Tensor<T> {
-        if self.dimensions != other.dimensions {
-            panic!("Tensors must have the same dimensions for multiplication");
-        }
-
+        assert_same_dimensions(self, other);
         let data: Vec<T> = self
             .data
             .iter()
@@ -226,10 +217,7 @@ where
     /// assert_eq!(result.get(&[1, 2]), &3); // 6 / 2
     /// ```
     pub fn div(&self, other: &Tensor<T>) -> Tensor<T> {
-        if self.dimensions != other.dimensions {
-            panic!("Tensors must have the same dimensions for division");
-        }
-
+        assert_same_dimensions(self, other);
         let default_value = T::default();
 
         let data: Vec<T> = self
@@ -331,10 +319,7 @@ where
     /// assert_eq!(tensor1.get(&[1, 2]), &3); // 1 + 2
     /// ```
     pub fn add_mutate(&mut self, other: &Tensor<T>) {
-        if self.dimensions != other.dimensions {
-            panic!("Tensors must have the same dimensions for addition");
-        }
-
+        assert_same_dimensions(self, other);
         for (a, b) in self.data.iter_mut().zip(&other.data) {
             *a += *b;
         }
@@ -376,10 +361,7 @@ where
     /// assert_eq!(tensor1.get(&[1, 2]), &2); // 5 - 3
     /// ```
     pub fn sub_mutate(&mut self, other: &Tensor<T>) {
-        if self.dimensions != other.dimensions {
-            panic!("Tensors must have the same dimensions for subtraction");
-        }
-
+        assert_same_dimensions(self, other);
         for (a, b) in self.data.iter_mut().zip(&other.data) {
             *a -= *b;
         }
@@ -422,10 +404,7 @@ where
     /// assert_eq!(tensor1.get(&[1, 2]), &6); // 2 * 3
     /// ```
     pub fn mul_mutate(&mut self, other: &Tensor<T>) {
-        if self.dimensions != other.dimensions {
-            panic!("Tensors must have the same dimensions for multiplication");
-        }
-
+        assert_same_dimensions(self, other);
         for (a, b) in self.data.iter_mut().zip(&other.data) {
             *a *= *b;
         }
@@ -469,10 +448,7 @@ where
     /// assert_eq!(tensor1.get(&[1, 2]), &2); // 6 / 3
     /// ```
     pub fn div_mutate(&mut self, other: &Tensor<T>) {
-        if self.dimensions != other.dimensions {
-            panic!("Tensors must have the same dimensions for division");
-        }
-
+        assert_same_dimensions(self, other);
         let default_value = T::default();
 
         for (a, b) in self.data.iter_mut().zip(&other.data) {

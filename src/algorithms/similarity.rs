@@ -1,6 +1,6 @@
 use core::ops::{Add, Mul, Sub};
-
 use crate::tensor::Tensor;
+use crate::assertions::assert_same_dimensions;
 
 // -------------------------------------------------------------------
 // This module contains the implementation of similarity metrics.
@@ -30,10 +30,7 @@ where
     ///
     /// The dot product as a value of type `T`.
     pub fn dot_product(&self, other: &Tensor<T>) -> T {
-        assert_eq!(
-            self.dimensions, other.dimensions,
-            "Tensors must have the same dimensions"
-        );
+        assert_same_dimensions(self, other);
         self.data
             .iter()
             .zip(&other.data)
@@ -62,11 +59,7 @@ where
     ///
     /// The cosine similarity as a `f64` value.
     pub fn cosine_similarity(&self, other: &Tensor<T>) -> f64 {
-        assert_eq!(
-            self.dimensions, other.dimensions,
-            "Tensors must have the same dimensions"
-        );
-
+        assert_same_dimensions(self, other);
         // Dot product of the two tensors
         let dot_product: f64 = self
             .data
@@ -120,11 +113,7 @@ where
     ///
     /// The Euclidean distance as a `f64` value.
     pub fn euclidean_distance(&self, other: &Tensor<T>) -> f64 {
-        assert_eq!(
-            self.dimensions, other.dimensions,
-            "Tensors must have the same dimensions"
-        );
-
+        assert_same_dimensions(self, other);
         // Squared difference between the two tensors
         let squared_diff: f64 = self
             .data

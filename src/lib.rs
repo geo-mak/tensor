@@ -1,4 +1,5 @@
 mod algorithms;
+mod assertions;
 mod cast;
 mod ops;
 mod tensor;
