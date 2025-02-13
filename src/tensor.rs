@@ -24,6 +24,8 @@ where
     /// Creates a new tensor with the specified dimensions and initializes all elements to a
     /// given value.
     ///
+    /// For creating `Tensor` declaratively, consider using `tensor!` macro.
+    ///
     /// # Parameters
     ///
     /// - `dimensions`: A vector specifying the size of each dimension of the tensor.
@@ -49,6 +51,42 @@ where
             data,
             dimensions,
             strides,
+        }
+    }
+
+    /// Creates a new tensor with the specified data and dimensions.
+    ///
+    /// For creating `Tensor` declaratively, consider using `tensor!` macro.
+    ///
+    /// # Parameters
+    ///
+    /// - `data`: A vector specifying the data in the tensor.
+    /// - `dimensions`: A vector specifying the size of each dimension of the tensor.
+    ///
+    /// # Returns
+    /// An instance of `Tensor<T>`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use tensor::Tensor;
+    /// let tensor = Tensor::with_data(vec![1,2,3,4,5,6], vec![2, 3]);
+    ///
+    /// assert_eq!(tensor.shape(), &[2, 3]);
+    ///
+    /// assert_eq!(tensor.get(&[0,0]), &1);
+    /// assert_eq!(tensor.get(&[0,1]), &2);
+    /// assert_eq!(tensor.get(&[0,2]), &3);
+    ///
+    /// assert_eq!(tensor.get(&[1,0]), &4);
+    /// assert_eq!(tensor.get(&[1,1]), &5);
+    /// assert_eq!(tensor.get(&[1,2]), &6);
+    /// ```
+    pub fn with_data(data: Vec<T>, dimensions: Vec<usize>) -> Self {
+        Self {
+            data,
+            strides: Self::compute_strides(&dimensions),
+            dimensions,
         }
     }
 

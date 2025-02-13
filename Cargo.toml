@@ -16,3 +16,10 @@ gnuplot = "0.0.43"
 [[bench]]
 name = "benchmarks"
 harness = false
+
+[dependencies]
+tensor_macro = {path = "tensor_macro", optional = true}
+
+[features]
+builder = ["tensor_macro"]
+all = ["builder"]
