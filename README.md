@@ -17,14 +17,6 @@ Currently, only CPU-based operations are supported without fancy optimizations a
 - Display formatted tensor output
 - Similarity measures: Dot product, Euclidean distance, Cosine similarity
 
-## Considered Features
-
-- Using SIMD for operations: 'Portable SIMD' in Rust is still unstable.
-Once 'Portable SIMD' is stable, it will be considered for optimization.
-See [issue tracking](https://github.com/rust-lang/rust/issues/86656).
-
-- Parallelization: Rayon is a good candidate for parallelization.
-
 ## Examples
 
 ###  Creating tensor with set and get
