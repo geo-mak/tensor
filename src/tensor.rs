@@ -53,7 +53,9 @@ where
             strides,
         }
     }
+}
 
+impl<T> Tensor<T> {
     /// Creates a new tensor with the specified data and dimensions.
     ///
     /// For creating `Tensor` declaratively, consider using `tensor!` macro.
@@ -290,8 +292,6 @@ where
 
 // Implement the Index trait for `Tensor`
 impl<T> Index<&[usize]> for Tensor<T>
-where
-    T: Copy,
 {
     type Output = T;
 
@@ -316,8 +316,6 @@ where
 
 // Implement the IndexMut trait for Tensor
 impl<T> IndexMut<&[usize]> for Tensor<T>
-where
-    T: Copy,
 {
     /// Retrieves a mutable reference to the value at the specified multidimensional indices
     /// using indexing preprocessing.
@@ -360,7 +358,7 @@ where
 // Implement Display for `Tensor`
 impl<T> Display for Tensor<T>
 where
-    T: Copy + Display,
+    T: Display,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         // Get the number of dimensions of the tensor
