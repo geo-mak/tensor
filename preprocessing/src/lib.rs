@@ -21,7 +21,7 @@ impl Parse for TensorMacroInput {
 
 // Intermediate types.
 type ItemsSequence = Punctuated<Expr, Token![,]>;
-type Values = Vec<proc_macro2::TokenStream>;
+type Values = Vec<proc_macro2::Literal>;
 type Dimensions = Vec<usize>;
 
 // Result.
@@ -63,7 +63,7 @@ fn parse_array(
                     syn::Lit::Float(float) => float.token(),
                     _ => unimplemented!("Unsupported value type"),
                 };
-                values.push(quote!(#value));
+                values.push(value);
             }
             _ => {}
         }
