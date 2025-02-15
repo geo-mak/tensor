@@ -1,6 +1,6 @@
-use core::ops::{Add, Mul, Sub};
-use crate::tensor::Tensor;
 use crate::assertions::assert_same_dimensions;
+use crate::tensor::Tensor;
+use core::ops::{Add, Mul, Sub};
 
 // -------------------------------------------------------------------
 // This module contains the implementation of similarity metrics.

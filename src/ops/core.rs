@@ -1,6 +1,6 @@
-use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-use crate::Tensor;
 use crate::assertions::assert_same_dimensions;
+use crate::Tensor;
+use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 //////////////////////////////////////////////////////////////////////
 // Immutable operations for `Tensor`

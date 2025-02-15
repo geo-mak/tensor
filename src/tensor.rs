@@ -56,13 +56,13 @@ where
 }
 
 impl<T> Tensor<T> {
-    /// Creates a new tensor with the specified data and dimensions.
+    /// Creates a new tensor with the specified values and dimensions.
     ///
     /// For creating `Tensor` declaratively, consider using `tensor!` macro.
     ///
     /// # Parameters
     ///
-    /// - `data`: A vector specifying the data in the tensor.
+    /// - `values`: A vector specifying the values in the tensor.
     /// - `dimensions`: A vector specifying the size of each dimension of the tensor.
     ///
     /// # Returns
@@ -72,7 +72,7 @@ impl<T> Tensor<T> {
     ///
     /// ```
     /// use tensor::Tensor;
-    /// let tensor = Tensor::with_data(vec![1,2,3,4,5,6], vec![2, 3]);
+    /// let tensor = Tensor::with_values(vec![1,2,3,4,5,6], vec![2, 3]);
     ///
     /// assert_eq!(tensor.shape(), &[2, 3]);
     ///
@@ -84,9 +84,9 @@ impl<T> Tensor<T> {
     /// assert_eq!(tensor.get(&[1,1]), &5);
     /// assert_eq!(tensor.get(&[1,2]), &6);
     /// ```
-    pub fn with_data(data: Vec<T>, dimensions: Vec<usize>) -> Self {
+    pub fn with_values(values: Vec<T>, dimensions: Vec<usize>) -> Self {
         Self {
-            data,
+            data: values,
             strides: Self::compute_strides(&dimensions),
             dimensions,
         }
@@ -291,8 +291,7 @@ impl<T> Tensor<T> {
 }
 
 // Implement the Index trait for `Tensor`
-impl<T> Index<&[usize]> for Tensor<T>
-{
+impl<T> Index<&[usize]> for Tensor<T> {
     type Output = T;
 
     /// Retrieves a reference to the value at the specified multidimensional indices using
@@ -315,8 +314,7 @@ impl<T> Index<&[usize]> for Tensor<T>
 }
 
 // Implement the IndexMut trait for Tensor
-impl<T> IndexMut<&[usize]> for Tensor<T>
-{
+impl<T> IndexMut<&[usize]> for Tensor<T> {
     /// Retrieves a mutable reference to the value at the specified multidimensional indices
     /// using indexing preprocessing.
     ///

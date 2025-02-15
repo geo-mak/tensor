@@ -1,14 +1,17 @@
 use proc_macro::TokenStream;
+use proc_macro2::Literal;
 use quote::quote;
 use syn::{Expr, ExprArray, Type, Token, parse_macro_input};
+use syn::Lit::{Float, Int};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
+use syn::spanned::Spanned;
 
 pub(crate) fn transform(input: TokenStream) -> TokenStream {
     let NestedArraysPattern { ty, array } = parse_macro_input!(input as NestedArraysPattern);
     let ParsedTensor {data, dimensions} = parse_nested_array(&array.elems);
     let instance_tokens = quote! {
-        Tensor::<#ty>::with_data(vec![#(#data),*], vec![#(#dimensions),*])
+        Tensor::<#ty>::with_values(vec![#(#data),*], vec![#(#dimensions),*])
     };
     TokenStream::from(instance_tokens)
 }
@@ -28,9 +31,8 @@ impl Parse for NestedArraysPattern {
     }
 }
 
-// Intermediate types.
-type ItemsSequence = Punctuated<Expr, Token![,]>;
-type Values = Vec<proc_macro2::Literal>;
+type ExprSequence = Punctuated<Expr, Token![,]>;
+type Values = Vec<Literal>;
 type Dimensions = Vec<usize>;
 
 // Result.
@@ -39,7 +41,7 @@ struct ParsedTensor {
     dimensions: Dimensions,
 }
 
-fn parse_nested_array(items: &ItemsSequence) -> ParsedTensor {
+fn parse_nested_array(items: &ExprSequence) -> ParsedTensor {
     let mut data = Vec::new();
     let mut dimensions = Vec::new();
     parse_array(items, &mut data, &mut dimensions, 0);
@@ -48,33 +50,61 @@ fn parse_nested_array(items: &ItemsSequence) -> ParsedTensor {
     }
 }
 
-/// Recursively parses nested arrays.
+// Recursively parses nested arrays.
 fn parse_array(
-    items: &ItemsSequence,
+    expressions: &ExprSequence,
     values: &mut Values,
     dimensions: &mut Dimensions,
     level: usize,
 ) {
+    let level_span = expressions.span();
+    let level_len = expressions.len();
+
     if level >= dimensions.len() {
-        dimensions.push(items.len());
-    } else if dimensions[level] < items.len() {
-        dimensions[level] = items.len();
+        dimensions.push(level_len);
+    } else if dimensions[level] != level_len {
+        panic!(
+            "Syntax error at {}:{}: expected length {} at level {}, but found {}",
+            level_span.start().line,
+            level_span.start().column,
+            dimensions[level],
+            level,
+            level_len
+        );
     }
 
-    for item in items {
-        match item {
-            Expr::Array(inner_array) => {
-                parse_array(&inner_array.elems, values, dimensions, level + 1);
-            },
-            Expr::Lit(value_expr) => {
-                let value = match &value_expr.lit {
-                    syn::Lit::Int(int) => int.token(),
-                    syn::Lit::Float(float) => float.token(),
-                    _ => unimplemented!("Unsupported value type"),
+    let mut is_array = false;
+    let mut is_literal = false;
+
+    for expr in expressions {
+        match expr {
+            Expr::Array(array_expr) => {
+                is_array = true;
+                parse_array(&array_expr.elems, values, dimensions, level + 1);
+            }
+            Expr::Lit(literal_expr) => {
+                is_literal = true;
+                let literal = match &literal_expr.lit {
+                    Int(int) => int.token(),
+                    Float(float) => float.token(),
+                    _ => panic!(
+                        "Value error at {}:{}: unsupported value type",
+                        level_span.start().line,
+                        level_span.start().column
+                    ),
                 };
-                values.push(value);
+                values.push(literal);
             }
             _ => {}
         }
+    }
+
+    if is_array && is_literal {
+        panic!(
+            "Syntax error at {}:{}: found both arrays and scalars at level {}",
+            level_span.start().line,
+            level_span.start().column,
+            level
+        );
     }
 }
