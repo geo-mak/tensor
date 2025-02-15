@@ -5,7 +5,7 @@ mod tests {
 
     // Test setting and getting tensor values
     #[test]
-    fn test_set_get() {
+    fn test_tensor_new_set_get() {
         let mut tensor = Tensor::new(vec![2, 3], 0);
         tensor.set(&[0, 0], 1);
         tensor.set(&[0, 1], 2);
@@ -20,6 +20,19 @@ mod tests {
         assert_eq!(tensor.get(&[1, 0]), &4);
         assert_eq!(tensor.get(&[1, 1]), &5);
         assert_eq!(tensor.get(&[1, 2]), &6);
+    }
+
+    #[test]
+    fn test_tensor_new_with_values() {
+        let tensor = Tensor::with_values(vec![1, 2, 3, 4, 5, 6, 7, 8], vec![2, 4]);
+        assert_eq!(tensor.shape(), &[2, 4]);
+        assert_eq!(tensor.get(&[1, 2]), &7);
+    }
+
+    #[test]
+    #[should_panic = "Dimensions's size doesn't match values' count"]
+    fn test_tensor_new_with_values_error() {
+        let _ = Tensor::with_values(vec![1, 2, 3, 4, 5, 6, 7, 8], vec![2, 5]);
     }
 
     // Test direct indexing with the Index and IndexMut traits

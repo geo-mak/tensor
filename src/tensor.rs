@@ -5,6 +5,8 @@ use core::slice::{Iter, IterMut};
 
 use crate::{CastError, TryCast};
 
+use crate::assertions::assert_valid_dimensions;
+
 /// A multidimensional tensor data structure.
 #[derive(Clone, PartialEq)]
 pub struct Tensor<T> {
@@ -41,11 +43,8 @@ where
     /// let tensor = Tensor::new(vec![2, 3], 0);
     /// ```
     pub fn new(dimensions: Vec<usize>, initial_value: T) -> Self {
-        // Calculate total number of elements in the tensor.
         let size = dimensions.iter().product();
-        // Create a vector filled with the initial value.
         let data = vec![initial_value; size];
-        // Compute strides
         let strides = Self::compute_strides(&dimensions);
         Tensor {
             data,
@@ -85,6 +84,7 @@ impl<T> Tensor<T> {
     /// assert_eq!(tensor.get(&[1,2]), &6);
     /// ```
     pub fn with_values(values: Vec<T>, dimensions: Vec<usize>) -> Self {
+        assert_valid_dimensions(&values, &dimensions);
         Self {
             data: values,
             strides: Self::compute_strides(&dimensions),
@@ -179,13 +179,8 @@ impl<T> Tensor<T> {
     /// This method will panic if the new dimensions do not match the number of elements in the
     /// tensor.
     pub fn reshape(&mut self, dimensions: &[usize]) {
-        // Calculate total number of elements for new dimensions.
-        let new_size: usize = dimensions.iter().product();
-        if new_size != self.data.len() {
-            panic!("New dimensions must have the same number of elements");
-        }
+        assert_valid_dimensions(&self.data, dimensions);
         self.strides = Self::compute_strides(dimensions);
-        // Update dimensions to new values.
         self.dimensions.clear();
         self.dimensions.extend_from_slice(dimensions);
     }
@@ -294,43 +289,41 @@ impl<T> Tensor<T> {
 impl<T> Index<&[usize]> for Tensor<T> {
     type Output = T;
 
-    /// Retrieves a reference to the value at the specified multidimensional indices using
-    /// indexing preprocessing.
+    /// Retrieves a reference to the value at the specified multidimensional index.
     ///
     /// # Parameters
     ///
-    /// - `indices`: A slice of indices specifying the position in each dimension.
+    /// - `index`: A slice of indices specifying the position in each dimension.
     ///
     /// # Panics
     /// This method will panic if the number of indices provided does not match the number of
-    /// dimensions of the tensor. It will panic also if any of the indices are out of bounds.
+    /// dimensions of the tensor. It will panic also if index is out of bounds.
     ///
     /// # Returns
     /// A reference to the value at the specified indices.
     #[inline]
-    fn index(&self, indices: &[usize]) -> &Self::Output {
-        &self.data[self.linear_index(indices)]
+    fn index(&self, index: &[usize]) -> &Self::Output {
+        &self.data[self.linear_index(index)]
     }
 }
 
 // Implement the IndexMut trait for Tensor
 impl<T> IndexMut<&[usize]> for Tensor<T> {
-    /// Retrieves a mutable reference to the value at the specified multidimensional indices
-    /// using indexing preprocessing.
+    /// Retrieves a mutable reference to the value at the specified multidimensional index.
     ///
     /// # Parameters
     ///
-    /// - `indices`: A slice of indices specifying the position in each dimension.
+    /// - `index`: A slice of indices specifying the position in each dimension.
     ///
     /// # Panics
     /// This method will panic if the number of indices provided does not match the number of
-    /// dimensions of the tensor. It will panic also if any of the indices are out of bounds.
+    /// dimensions of the tensor. It will panic also if index is out of bounds.
     ///
     /// # Returns
     /// A mutable reference to the value at the specified indices.
     #[inline]
-    fn index_mut(&mut self, indices: &[usize]) -> &mut Self::Output {
-        let idx = self.linear_index(indices);
+    fn index_mut(&mut self, index: &[usize]) -> &mut Self::Output {
+        let idx = self.linear_index(index);
         &mut self.data[idx]
     }
 }

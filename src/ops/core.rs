@@ -178,7 +178,7 @@ where
 // Implement division for `Tensor`
 impl<T> Tensor<T>
 where
-    T: Copy + Default + PartialEq + Div<Output = T>,
+    T: Copy + Div<Output = T>,
 {
     /// Performs element-wise division of two tensors.
     ///
@@ -218,18 +218,11 @@ where
     /// ```
     pub fn div(&self, other: &Tensor<T>) -> Tensor<T> {
         assert_same_dimensions(self, other);
-        let default_value = T::default();
-
         let data: Vec<T> = self
             .data
             .iter()
             .zip(&other.data)
-            .map(|(a, b)| {
-                if *b == default_value {
-                    panic!("Division by zero");
-                }
-                *a / *b
-            })
+            .map(|(a, b)| *a / *b)
             .collect();
 
         Tensor {
@@ -414,7 +407,7 @@ where
 // Implement mutable division for Tensor
 impl<T> Tensor<T>
 where
-    T: Copy + Default + PartialEq + DivAssign,
+    T: Copy + DivAssign,
 {
     /// Performs in-place element-wise division of `self` by another tensor.
     ///
@@ -449,12 +442,7 @@ where
     /// ```
     pub fn div_mutate(&mut self, other: &Tensor<T>) {
         assert_same_dimensions(self, other);
-        let default_value = T::default();
-
         for (a, b) in self.data.iter_mut().zip(&other.data) {
-            if *b == default_value {
-                panic!("Division by zero");
-            }
             *a /= *b;
         }
     }
@@ -546,15 +534,6 @@ mod tests {
         assert_eq!(result.get(&[0, 1]), &2);
         assert_eq!(result.get(&[1, 0]), &2);
         assert_eq!(result.get(&[1, 1]), &2);
-    }
-
-    // Test tensor division by zero
-    #[test]
-    #[should_panic(expected = "Division by zero")]
-    fn test_div_by_zero() {
-        let tensor1 = Tensor::new(vec![2, 2], 6);
-        let tensor2 = Tensor::new(vec![2, 2], 0);
-        tensor1.div(&tensor2);
     }
 
     #[test]
