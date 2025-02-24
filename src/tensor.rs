@@ -15,10 +15,6 @@ pub struct Tensor<T> {
     pub(crate) strides: Vec<usize>,
 }
 
-//////////////////////////////////////////////////////////////////////
-// Core implementation for `Tensor`
-//////////////////////////////////////////////////////////////////////
-
 impl<T> Tensor<T>
 where
     T: Copy,
@@ -101,33 +97,30 @@ impl<T> Tensor<T> {
         strides
     }
 
-    /// Calculates the linear index in the flattened data vector from the multidimensional indices.
+    /// Computes and returns the linear index of an item in the data vector.
     ///
     /// # Parameters
     ///
-    /// - `indices`: A slice of `usize` values representing the indices in each dimension of the
+    /// - `index`: A slice of `usize` values representing the indices in each dimension of the
     ///   tensor.
     ///
     /// # Panics
     /// This method will panic if the number of indices provided does not match the number of
     /// dimensions of the tensor.
-    ///
-    /// # Returns
-    /// A `usize` value which is the computed linear index in the flattened data vector.
     #[inline]
-    fn linear_index(&self, indices: &[usize]) -> usize {
-        if indices.len() != self.dimensions.len() {
+    fn compute_index(&self, index: &[usize]) -> usize {
+        if index.len() != self.dimensions.len() {
             panic!("Incorrect number of indices");
         }
 
-        indices
+        index
             .iter()
             .zip(&self.strides)
-            .map(|(&ind, &stride)| ind * stride)
+            .map(|(&idx, &stride)| idx * stride)
             .sum()
     }
 
-    /// Retrieves a reference to the value at the specified multidimensional indices.
+    /// Returns a reference to the value at the specified multidimensional index.
     ///
     /// # Parameters
     ///
@@ -136,34 +129,28 @@ impl<T> Tensor<T> {
     /// # Panics
     /// This method will panic if the number of indices provided does not match the number of
     /// dimensions of the tensor. It will panic also if any of the indices are out of bounds.
-    ///
-    /// # Returns
-    /// A reference to the value at the specified indices.
     #[inline]
-    pub fn get(&self, indices: &[usize]) -> &T {
-        &self.data[self.linear_index(indices)]
+    pub fn get(&self, index: &[usize]) -> &T {
+        &self.data[self.compute_index(index)]
     }
 
     /// Sets the value at the specified multidimensional indices.
     ///
     /// # Parameters
     ///
-    /// - `indices`: A slice of indices specifying the position in each dimension.
+    /// - `index`: A slice of indices specifying the position in each dimension.
     /// - `value`: The value to set at the specified indices.
     ///
     /// # Panics
     /// This method will panic if the number of indices provided does not match the number of
     /// dimensions of the tensor. It will panic also if any of the indices are out of bounds.
     #[inline]
-    pub fn set(&mut self, indices: &[usize], value: T) {
-        let idx = self.linear_index(indices);
+    pub fn set(&mut self, index: &[usize], value: T) {
+        let idx = self.compute_index(index);
         self.data[idx] = value;
     }
 
     /// Returns the shape (dimensions) of the tensor.
-    ///
-    /// # Returns
-    /// A slice of `usize` representing the size of each dimension of the tensor.
     #[inline]
     pub fn shape(&self) -> &[usize] {
         &self.dimensions
@@ -199,10 +186,7 @@ impl<T> Tensor<T> {
     /// This method calculates the total number of elements by multiplying the sizes
     /// of all dimensions. For example, a tensor with dimensions `[2, 3, 4]` will have
     /// `2 * 3 * 4 = 24` elements.
-    ///
-    /// # Returns
-    /// The total number of elements as a `usize`.
-    ///
+    /// 
     /// # Example
     ///
     /// ```
@@ -227,9 +211,6 @@ impl<T> Tensor<T> {
     /// # Parameters
     ///
     /// - `dim_index`: The index of the dimension (0-based) for which to get the size.
-    ///
-    /// # Returns
-    /// The number of elements along the specified dimension.
     ///
     /// # Example
     ///
@@ -263,10 +244,6 @@ impl<T> Tensor<T> {
 
     /// Attempts to cast the tensor into a tensor of a different type without consuming
     /// the original tensor.
-    ///
-    /// # Returns
-    /// - `Ok(Tensor<U>)`: if the conversion is successful.
-    /// - `Err(CastError)`: if the conversion fails.
     pub fn try_cast<U>(&self) -> Result<Tensor<U>, CastError>
     where
         T: TryCast<U>,
@@ -285,11 +262,10 @@ impl<T> Tensor<T> {
     }
 }
 
-// Implement the Index trait for `Tensor`
 impl<T> Index<&[usize]> for Tensor<T> {
     type Output = T;
 
-    /// Retrieves a reference to the value at the specified multidimensional index.
+    /// Returns a reference to the value at the specified multidimensional index.
     ///
     /// # Parameters
     ///
@@ -297,19 +273,14 @@ impl<T> Index<&[usize]> for Tensor<T> {
     ///
     /// # Panics
     /// This method will panic if the number of indices provided does not match the number of
-    /// dimensions of the tensor. It will panic also if index is out of bounds.
-    ///
-    /// # Returns
-    /// A reference to the value at the specified indices.
     #[inline]
     fn index(&self, index: &[usize]) -> &Self::Output {
-        &self.data[self.linear_index(index)]
+        &self.data[self.compute_index(index)]
     }
 }
 
-// Implement the IndexMut trait for Tensor
 impl<T> IndexMut<&[usize]> for Tensor<T> {
-    /// Retrieves a mutable reference to the value at the specified multidimensional index.
+    /// Returns a mutable reference to the value at the specified multidimensional index.
     ///
     /// # Parameters
     ///
@@ -318,21 +289,13 @@ impl<T> IndexMut<&[usize]> for Tensor<T> {
     /// # Panics
     /// This method will panic if the number of indices provided does not match the number of
     /// dimensions of the tensor. It will panic also if index is out of bounds.
-    ///
-    /// # Returns
-    /// A mutable reference to the value at the specified indices.
     #[inline]
     fn index_mut(&mut self, index: &[usize]) -> &mut Self::Output {
-        let idx = self.linear_index(index);
+        let idx = self.compute_index(index);
         &mut self.data[idx]
     }
 }
 
-//////////////////////////////////////////////////////////////////////
-// Display and Debug implementations for `Tensor`
-//////////////////////////////////////////////////////////////////////
-
-// Implement Debug for `Tensor`
 impl<T> Debug for Tensor<T>
 where
     T: Debug,
