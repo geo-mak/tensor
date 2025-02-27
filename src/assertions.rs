@@ -1,6 +1,5 @@
 use crate::Tensor;
 
-#[inline(always)]
 pub(crate) fn assert_same_dimensions<T>(a: &Tensor<T>, b: &Tensor<T>) {
     assert_eq!(
         a.dimensions, b.dimensions,
@@ -8,12 +7,17 @@ pub(crate) fn assert_same_dimensions<T>(a: &Tensor<T>, b: &Tensor<T>) {
     );
 }
 
-#[inline(always)]
-pub(crate) fn assert_valid_dimensions<T>(data: &[T], dimensions: &[usize]) {
-    let data_count = data.len();
-    let dim_count = dimensions.iter().product();
+pub(crate) fn assert_valid_dimensions(dims: &[usize], size: usize) {
+    // size alone is unsound because [] will return 1 as product
+    assert!(dims.len() > 0 && size > 0, "Invalid dimensions: {:?}", dims);
+}
+
+pub(crate) fn assert_valid_shape(len: usize, dimensions: &[usize]) {
+    let size: usize = dimensions.iter().product();
+    assert_valid_dimensions(dimensions, size);
     assert_eq!(
-        data_count, dim_count,
-        "Dimensions's size doesn't match values' count"
+        len, size,
+        "Invalid shape: Values' count is {}, but dimensions' size is {}",
+        len, size
     );
 }

@@ -10,7 +10,6 @@ use core::ops::{Add, Mul, Sub};
 // - euclidean_distance: Euclidean distance between two tensors.
 // -------------------------------------------------------------------
 
-// Implement dot product for `Tensor`
 impl<T> Tensor<T>
 where
     T: Add<Output = T> + Mul<Output = T> + Copy + Default,
@@ -39,7 +38,6 @@ where
     }
 }
 
-// Implement cosine similarity for `Tensor`
 impl<T> Tensor<T>
 where
     T: Add<Output = T> + Mul<Output = T> + Copy + Into<f64>,
@@ -93,7 +91,6 @@ where
     }
 }
 
-// Implement euclidean distance for `Tensor`
 impl<T> Tensor<T>
 where
     T: Add<Output = T> + Mul<Output = T> + Sub<Output = T> + Copy + Into<f64>,
@@ -133,8 +130,8 @@ mod tests {
 
     #[test]
     fn test_cosine_similarity() {
-        let tensor1 = Tensor::new(vec![1, 3], 1.0);
-        let tensor2 = Tensor::new(vec![1, 3], 2.0);
+        let tensor1 = Tensor::new_set(vec![1, 3], 1.0);
+        let tensor2 = Tensor::new_set(vec![1, 3], 2.0);
         let result = tensor1.cosine_similarity(&tensor2);
         let expected: f64 = 1.0;
         // Toleration of 1e-6 for floating point arithmetic
@@ -143,8 +140,8 @@ mod tests {
 
     #[test]
     fn test_euclidean_distance() {
-        let tensor1 = Tensor::new(vec![1, 3], 1.0);
-        let tensor2 = Tensor::new(vec![1, 3], 2.0);
+        let tensor1 = Tensor::new_set(vec![1, 3], 1.0);
+        let tensor2 = Tensor::new_set(vec![1, 3], 2.0);
         let result = tensor1.euclidean_distance(&tensor2);
         let expected: f64 = 1.7320508075688772;
         assert!((result - expected).abs() < 1e-6);
@@ -152,8 +149,8 @@ mod tests {
 
     #[test]
     fn test_dot_product() {
-        let tensor1 = Tensor::new(vec![1, 3], 1.0);
-        let tensor2 = Tensor::new(vec![1, 3], 2.0);
+        let tensor1 = Tensor::new_set(vec![1, 3], 1.0);
+        let tensor2 = Tensor::new_set(vec![1, 3], 2.0);
         let result = tensor1.dot_product(&tensor2);
         let expected: f64 = 6.0;
         assert!((result - expected).abs() < 1e-6);
@@ -161,8 +158,8 @@ mod tests {
 
     #[test]
     fn test_cosine_similarity_4d() {
-        let tensor1 = Tensor::new(vec![2, 2, 2, 2], 1.0);
-        let tensor2 = Tensor::new(vec![2, 2, 2, 2], 2.0);
+        let tensor1 = Tensor::new_set(vec![2, 2, 2, 2], 1.0);
+        let tensor2 = Tensor::new_set(vec![2, 2, 2, 2], 2.0);
         let result = tensor1.cosine_similarity(&tensor2);
         let expected: f64 = 1.0;
         assert!((result - expected).abs() < 1e-6);
@@ -170,8 +167,8 @@ mod tests {
 
     #[test]
     fn test_euclidean_distance_4d() {
-        let tensor1 = Tensor::new(vec![2, 2, 2, 2], 1.0);
-        let tensor2 = Tensor::new(vec![2, 2, 2, 2], 2.0);
+        let tensor1 = Tensor::new_set(vec![2, 2, 2, 2], 1.0);
+        let tensor2 = Tensor::new_set(vec![2, 2, 2, 2], 2.0);
         let result = tensor1.euclidean_distance(&tensor2);
         let expected: f64 = 4.0;
         assert!((result - expected).abs() < 1e-6);
@@ -179,8 +176,8 @@ mod tests {
 
     #[test]
     fn test_dot_product_4d() {
-        let tensor1 = Tensor::new(vec![2, 2, 2, 2], 1.0);
-        let tensor2 = Tensor::new(vec![2, 2, 2, 2], 2.0);
+        let tensor1 = Tensor::new_set(vec![2, 2, 2, 2], 1.0);
+        let tensor2 = Tensor::new_set(vec![2, 2, 2, 2], 2.0);
         let result = tensor1.dot_product(&tensor2);
         let expected: f64 = 32.0;
         assert!((result - expected).abs() < 1e-6);

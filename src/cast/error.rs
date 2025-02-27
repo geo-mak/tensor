@@ -3,10 +3,8 @@
 /// The following errors are defined:
 /// - `Overflow`: The result of the casting operation is too large to be represented by the target type.
 /// - `PrecisionLoss`: The casting operation results in a loss of precision.
-/// - `UndefinedBehavior`: The casting operation results in undefined behavior.
 #[derive(Debug, PartialEq)]
 pub enum CastError {
     Overflow,
     PrecisionLoss,
-    UndefinedBehavior,
 }

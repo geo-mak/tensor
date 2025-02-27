@@ -3,8 +3,8 @@ use tensor::Tensor;
 
 // Small tensor benchmarks
 fn benchmark_add_small(c: &mut Criterion) {
-    let tensor1 = Tensor::<f64>::new(vec![100, 100], 1.0);
-    let tensor2 = Tensor::<f64>::new(vec![100, 100], 2.0);
+    let tensor1 = Tensor::<f64>::new_set(vec![100, 100], 1.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![100, 100], 2.0);
     c.bench_function("tensor_addition_small", |b| {
         b.iter(|| {
             black_box(tensor1.add(&tensor2));
@@ -13,8 +13,8 @@ fn benchmark_add_small(c: &mut Criterion) {
 }
 
 fn benchmark_add_mut_small(c: &mut Criterion) {
-    let mut tensor1 = Tensor::<f64>::new(vec![100, 100], 1.0);
-    let tensor2 = Tensor::<f64>::new(vec![100, 100], 2.0);
+    let mut tensor1 = Tensor::<f64>::new_set(vec![100, 100], 1.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![100, 100], 2.0);
     c.bench_function("tensor_add_mutation_small", |b| {
         b.iter(|| {
             black_box(tensor1.add_mutate(&tensor2));
@@ -23,8 +23,8 @@ fn benchmark_add_mut_small(c: &mut Criterion) {
 }
 
 fn benchmark_sub_small(c: &mut Criterion) {
-    let tensor1 = Tensor::<f64>::new(vec![100, 100], 5.0);
-    let tensor2 = Tensor::<f64>::new(vec![100, 100], 3.0);
+    let tensor1 = Tensor::<f64>::new_set(vec![100, 100], 5.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![100, 100], 3.0);
     c.bench_function("tensor_subtraction_small", |b| {
         b.iter(|| {
             black_box(tensor1.sub(&tensor2));
@@ -33,8 +33,8 @@ fn benchmark_sub_small(c: &mut Criterion) {
 }
 
 fn benchmark_sub_mut_small(c: &mut Criterion) {
-    let mut tensor1 = Tensor::<f64>::new(vec![100, 100], 5.0);
-    let tensor2 = Tensor::<f64>::new(vec![100, 100], 3.0);
+    let mut tensor1 = Tensor::<f64>::new_set(vec![100, 100], 5.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![100, 100], 3.0);
     c.bench_function("tensor_subtraction_mutation_small", |b| {
         b.iter(|| {
             black_box(tensor1.sub_mutate(&tensor2));
@@ -43,8 +43,8 @@ fn benchmark_sub_mut_small(c: &mut Criterion) {
 }
 
 fn benchmark_mul_small(c: &mut Criterion) {
-    let tensor1 = Tensor::<f64>::new(vec![100, 100], 2.0);
-    let tensor2 = Tensor::<f64>::new(vec![100, 100], 3.0);
+    let tensor1 = Tensor::<f64>::new_set(vec![100, 100], 2.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![100, 100], 3.0);
     c.bench_function("tensor_multiplication_small", |b| {
         b.iter(|| {
             black_box(tensor1.mul(&tensor2));
@@ -53,8 +53,8 @@ fn benchmark_mul_small(c: &mut Criterion) {
 }
 
 fn benchmark_mul_mut_small(c: &mut Criterion) {
-    let mut tensor1 = Tensor::<f64>::new(vec![100, 100], 2.0);
-    let tensor2 = Tensor::<f64>::new(vec![100, 100], 3.0);
+    let mut tensor1 = Tensor::<f64>::new_set(vec![100, 100], 2.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![100, 100], 3.0);
     c.bench_function("tensor_multiplication_mutation_small", |b| {
         b.iter(|| {
             black_box(tensor1.mul_mutate(&tensor2));
@@ -63,8 +63,8 @@ fn benchmark_mul_mut_small(c: &mut Criterion) {
 }
 
 fn benchmark_div_small(c: &mut Criterion) {
-    let tensor1 = Tensor::<f64>::new(vec![100, 100], 6.0);
-    let tensor2 = Tensor::<f64>::new(vec![100, 100], 3.0);
+    let tensor1 = Tensor::<f64>::new_set(vec![100, 100], 6.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![100, 100], 3.0);
     c.bench_function("tensor_division_small", |b| {
         b.iter(|| {
             black_box(tensor1.div(&tensor2));
@@ -73,8 +73,8 @@ fn benchmark_div_small(c: &mut Criterion) {
 }
 
 fn benchmark_div_mut_small(c: &mut Criterion) {
-    let mut tensor1 = Tensor::<f64>::new(vec![100, 100], 6.0);
-    let tensor2 = Tensor::<f64>::new(vec![100, 100], 3.0);
+    let mut tensor1 = Tensor::<f64>::new_set(vec![100, 100], 6.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![100, 100], 3.0);
     c.bench_function("tensor_division_mutation_small", |b| {
         b.iter(|| {
             black_box(tensor1.div_mutate(&tensor2));
@@ -83,7 +83,7 @@ fn benchmark_div_mut_small(c: &mut Criterion) {
 }
 
 fn benchmark_neg_small(c: &mut Criterion) {
-    let tensor = Tensor::<f64>::new(vec![100, 100], 1.0);
+    let tensor = Tensor::<f64>::new_set(vec![100, 100], 1.0);
     c.bench_function("tensor_negation_small", |b| {
         b.iter(|| {
             black_box(tensor.neg());
@@ -92,7 +92,7 @@ fn benchmark_neg_small(c: &mut Criterion) {
 }
 
 fn benchmark_neg_mut_small(c: &mut Criterion) {
-    let mut tensor = Tensor::<f64>::new(vec![100, 100], 1.0);
+    let mut tensor = Tensor::<f64>::new_set(vec![100, 100], 1.0);
     c.bench_function("tensor_negation_mutation_small", |b| {
         b.iter(|| {
             black_box(tensor.neg_mutate());
@@ -102,8 +102,8 @@ fn benchmark_neg_mut_small(c: &mut Criterion) {
 
 // Large tensor benchmarks
 fn benchmark_add_large(c: &mut Criterion) {
-    let tensor1 = Tensor::<f64>::new(vec![10_000, 10_000], 1.0);
-    let tensor2 = Tensor::<f64>::new(vec![10_000, 10_000], 2.0);
+    let tensor1 = Tensor::<f64>::new_set(vec![10_000, 10_000], 1.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![10_000, 10_000], 2.0);
     c.bench_function("tensor_addition_large", |b| {
         b.iter(|| {
             black_box(tensor1.add(&tensor2));
@@ -112,8 +112,8 @@ fn benchmark_add_large(c: &mut Criterion) {
 }
 
 fn benchmark_add_mut_large(c: &mut Criterion) {
-    let mut tensor1 = Tensor::<f64>::new(vec![10_000, 10_000], 1.0);
-    let tensor2 = Tensor::<f64>::new(vec![10_000, 10_000], 2.0);
+    let mut tensor1 = Tensor::<f64>::new_set(vec![10_000, 10_000], 1.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![10_000, 10_000], 2.0);
     c.bench_function("tensor_add_mutation_large", |b| {
         b.iter(|| {
             black_box(tensor1.add_mutate(&tensor2));
@@ -122,8 +122,8 @@ fn benchmark_add_mut_large(c: &mut Criterion) {
 }
 
 fn benchmark_sub_large(c: &mut Criterion) {
-    let tensor1 = Tensor::<f64>::new(vec![10_000, 10_000], 5.0);
-    let tensor2 = Tensor::<f64>::new(vec![10_000, 10_000], 3.0);
+    let tensor1 = Tensor::<f64>::new_set(vec![10_000, 10_000], 5.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![10_000, 10_000], 3.0);
     c.bench_function("tensor_subtraction_large", |b| {
         b.iter(|| {
             black_box(tensor1.sub(&tensor2));
@@ -132,8 +132,8 @@ fn benchmark_sub_large(c: &mut Criterion) {
 }
 
 fn benchmark_sub_mut_large(c: &mut Criterion) {
-    let mut tensor1 = Tensor::<f64>::new(vec![10_000, 10_000], 5.0);
-    let tensor2 = Tensor::<f64>::new(vec![10_000, 10_000], 3.0);
+    let mut tensor1 = Tensor::<f64>::new_set(vec![10_000, 10_000], 5.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![10_000, 10_000], 3.0);
     c.bench_function("tensor_subtraction_mutation_large", |b| {
         b.iter(|| {
             black_box(tensor1.sub_mutate(&tensor2));
@@ -142,8 +142,8 @@ fn benchmark_sub_mut_large(c: &mut Criterion) {
 }
 
 fn benchmark_mul_large(c: &mut Criterion) {
-    let tensor1 = Tensor::<f64>::new(vec![10_000, 10_000], 2.0);
-    let tensor2 = Tensor::<f64>::new(vec![10_000, 10_000], 3.0);
+    let tensor1 = Tensor::<f64>::new_set(vec![10_000, 10_000], 2.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![10_000, 10_000], 3.0);
     c.bench_function("tensor_multiplication_large", |b| {
         b.iter(|| {
             black_box(tensor1.mul(&tensor2));
@@ -152,8 +152,8 @@ fn benchmark_mul_large(c: &mut Criterion) {
 }
 
 fn benchmark_mul_mut_large(c: &mut Criterion) {
-    let mut tensor1 = Tensor::<f64>::new(vec![10_000, 10_000], 2.0);
-    let tensor2 = Tensor::<f64>::new(vec![10_000, 10_000], 3.0);
+    let mut tensor1 = Tensor::<f64>::new_set(vec![10_000, 10_000], 2.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![10_000, 10_000], 3.0);
     c.bench_function("tensor_multiplication_mutation_large", |b| {
         b.iter(|| {
             black_box(tensor1.mul_mutate(&tensor2));
@@ -162,8 +162,8 @@ fn benchmark_mul_mut_large(c: &mut Criterion) {
 }
 
 fn benchmark_div_large(c: &mut Criterion) {
-    let tensor1 = Tensor::<f64>::new(vec![10_000, 10_000], 6.0);
-    let tensor2 = Tensor::<f64>::new(vec![10_000, 10_000], 3.0);
+    let tensor1 = Tensor::<f64>::new_set(vec![10_000, 10_000], 6.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![10_000, 10_000], 3.0);
     c.bench_function("tensor_division_large", |b| {
         b.iter(|| {
             black_box(tensor1.div(&tensor2));
@@ -172,8 +172,8 @@ fn benchmark_div_large(c: &mut Criterion) {
 }
 
 fn benchmark_div_mut_large(c: &mut Criterion) {
-    let mut tensor1 = Tensor::<f64>::new(vec![10_000, 10_000], 6.0);
-    let tensor2 = Tensor::<f64>::new(vec![10_000, 10_000], 3.0);
+    let mut tensor1 = Tensor::<f64>::new_set(vec![10_000, 10_000], 6.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![10_000, 10_000], 3.0);
     c.bench_function("tensor_division_mutation_large", |b| {
         b.iter(|| {
             black_box(tensor1.div_mutate(&tensor2));
@@ -182,7 +182,7 @@ fn benchmark_div_mut_large(c: &mut Criterion) {
 }
 
 fn benchmark_neg_large(c: &mut Criterion) {
-    let tensor = Tensor::<f64>::new(vec![10_000, 10_000], 1.0);
+    let tensor = Tensor::<f64>::new_set(vec![10_000, 10_000], 1.0);
     c.bench_function("tensor_negation_large", |b| {
         b.iter(|| {
             black_box(tensor.neg());
@@ -191,7 +191,7 @@ fn benchmark_neg_large(c: &mut Criterion) {
 }
 
 fn benchmark_neg_mut_large(c: &mut Criterion) {
-    let mut tensor = Tensor::<f64>::new(vec![10_000, 10_000], 1.0);
+    let mut tensor = Tensor::<f64>::new_set(vec![10_000, 10_000], 1.0);
     c.bench_function("tensor_negation_mutation_large", |b| {
         b.iter(|| {
             black_box(tensor.neg_mutate());
@@ -201,7 +201,7 @@ fn benchmark_neg_mut_large(c: &mut Criterion) {
 
 // Small tensor benchmarks for casting
 fn benchmark_casting_small(c: &mut Criterion) {
-    let tensor_int = Tensor::<f64>::new(vec![100, 100], 1.0);
+    let tensor_int = Tensor::<f64>::new_set(vec![100, 100], 1.0);
     c.bench_function("tensor_casting_small", |b| {
         b.iter(|| {
             black_box(tensor_int.try_cast::<i8>().unwrap());
@@ -211,7 +211,7 @@ fn benchmark_casting_small(c: &mut Criterion) {
 
 // Large tensor benchmarks for casting
 fn benchmark_casting_large(c: &mut Criterion) {
-    let tensor_int = Tensor::<f64>::new(vec![10_000, 10_000], 1.0);
+    let tensor_int = Tensor::<f64>::new_set(vec![10_000, 10_000], 1.0);
     c.bench_function("tensor_casting_large", |b| {
         b.iter(|| {
             black_box(tensor_int.try_cast::<i8>().unwrap());
@@ -221,8 +221,8 @@ fn benchmark_casting_large(c: &mut Criterion) {
 
 // similarity measures benchmarks for 4D tensors
 fn benchmark_dot_product_4d(c: &mut Criterion) {
-    let tensor1 = Tensor::<f64>::new(vec![10, 10, 10, 10], 1.0);
-    let tensor2 = Tensor::<f64>::new(vec![10, 10, 10, 10], 2.0);
+    let tensor1 = Tensor::<f64>::new_set(vec![10, 10, 10, 10], 1.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![10, 10, 10, 10], 2.0);
     c.bench_function("tensor_dot_product_4d", |b| {
         b.iter(|| {
             black_box(tensor1.dot_product(&tensor2));
@@ -231,8 +231,8 @@ fn benchmark_dot_product_4d(c: &mut Criterion) {
 }
 
 fn benchmark_cosine_similarity_4d(c: &mut Criterion) {
-    let tensor1 = Tensor::<f64>::new(vec![10, 10, 10, 10], 1.0);
-    let tensor2 = Tensor::<f64>::new(vec![10, 10, 10, 10], 2.0);
+    let tensor1 = Tensor::<f64>::new_set(vec![10, 10, 10, 10], 1.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![10, 10, 10, 10], 2.0);
     c.bench_function("tensor_cosine_similarity_4d", |b| {
         b.iter(|| {
             black_box(tensor1.cosine_similarity(&tensor2));
@@ -241,8 +241,8 @@ fn benchmark_cosine_similarity_4d(c: &mut Criterion) {
 }
 
 fn benchmark_euclidean_distance_4d(c: &mut Criterion) {
-    let tensor1 = Tensor::<f64>::new(vec![10, 10, 10, 10], 1.0);
-    let tensor2 = Tensor::<f64>::new(vec![10, 10, 10, 10], 2.0);
+    let tensor1 = Tensor::<f64>::new_set(vec![10, 10, 10, 10], 1.0);
+    let tensor2 = Tensor::<f64>::new_set(vec![10, 10, 10, 10], 2.0);
     c.bench_function("tensor_euclidean_distance_4d", |b| {
         b.iter(|| {
             black_box(tensor1.euclidean_distance(&tensor2));

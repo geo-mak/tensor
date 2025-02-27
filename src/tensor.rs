@@ -5,7 +5,7 @@ use core::slice::{Iter, IterMut};
 
 use crate::{CastError, TryCast};
 
-use crate::assertions::assert_valid_dimensions;
+use crate::assertions::{assert_valid_dimensions, assert_valid_shape};
 
 /// A multidimensional tensor data structure.
 #[derive(Clone, PartialEq)]
@@ -15,10 +15,7 @@ pub struct Tensor<T> {
     pub(crate) strides: Vec<usize>,
 }
 
-impl<T> Tensor<T>
-where
-    T: Copy,
-{
+impl<T> Tensor<T> {
     /// Creates a new tensor with the specified dimensions and initializes all elements to a
     /// given value.
     ///
@@ -27,20 +24,25 @@ where
     /// # Parameters
     ///
     /// - `dimensions`: A vector specifying the size of each dimension of the tensor.
-    /// - `initial_value`: The value to initialize all elements of the tensor.
+    /// - `value`: The value to initialize all elements of the tensor.
     ///
-    /// # Returns
-    /// An instance of `Tensor<T>`.
+    /// # Panics
+    /// This method will panic if dimensions are invalid e.g. empty or an axis is `0`.
     ///
     /// # Example
     ///
     /// ```
     /// use tensor::Tensor;
-    /// let tensor = Tensor::new(vec![2, 3], 0);
+    ///
+    /// let tensor = Tensor::new_set(vec![2, 3], 0);
     /// ```
-    pub fn new(dimensions: Vec<usize>, initial_value: T) -> Self {
+    pub fn new_set(dimensions: Vec<usize>, value: T) -> Self
+    where
+        T: Clone,
+    {
         let size = dimensions.iter().product();
-        let data = vec![initial_value; size];
+        assert_valid_dimensions(&dimensions, size);
+        let data = vec![value; size];
         let strides = Self::compute_strides(&dimensions);
         Tensor {
             data,
@@ -48,9 +50,7 @@ where
             strides,
         }
     }
-}
 
-impl<T> Tensor<T> {
     /// Creates a new tensor with the specified values and dimensions.
     ///
     /// For creating `Tensor` declaratively, consider using `tensor!` macro.
@@ -60,8 +60,9 @@ impl<T> Tensor<T> {
     /// - `values`: A vector specifying the values in the tensor.
     /// - `dimensions`: A vector specifying the size of each dimension of the tensor.
     ///
-    /// # Returns
-    /// An instance of `Tensor<T>`.
+    /// # Panics
+    /// This method will panic if the dimensions do not match the number of elements in the
+    /// tensor or if an axis is `0`
     ///
     /// # Example
     ///
@@ -80,7 +81,7 @@ impl<T> Tensor<T> {
     /// assert_eq!(tensor.get(&[1,2]), &6);
     /// ```
     pub fn with_values(values: Vec<T>, dimensions: Vec<usize>) -> Self {
-        assert_valid_dimensions(&values, &dimensions);
+        assert_valid_shape(values.len(), &dimensions);
         Self {
             data: values,
             strides: Self::compute_strides(&dimensions),
@@ -120,20 +121,6 @@ impl<T> Tensor<T> {
             .sum()
     }
 
-    /// Returns a reference to the value at the specified multidimensional index.
-    ///
-    /// # Parameters
-    ///
-    /// - `indices`: A slice of indices specifying the position in each dimension.
-    ///
-    /// # Panics
-    /// This method will panic if the number of indices provided does not match the number of
-    /// dimensions of the tensor. It will panic also if any of the indices are out of bounds.
-    #[inline]
-    pub fn get(&self, index: &[usize]) -> &T {
-        &self.data[self.compute_index(index)]
-    }
-
     /// Sets the value at the specified multidimensional indices.
     ///
     /// # Parameters
@@ -150,6 +137,20 @@ impl<T> Tensor<T> {
         self.data[idx] = value;
     }
 
+    /// Returns a reference to the value at the specified multidimensional index.
+    ///
+    /// # Parameters
+    ///
+    /// - `indices`: A slice of indices specifying the position in each dimension.
+    ///
+    /// # Panics
+    /// This method will panic if the number of indices provided does not match the number of
+    /// dimensions of the tensor. It will panic also if any of the indices are out of bounds.
+    #[inline]
+    pub fn get(&self, index: &[usize]) -> &T {
+        &self.data[self.compute_index(index)]
+    }
+
     /// Returns the shape (dimensions) of the tensor.
     #[inline]
     pub fn shape(&self) -> &[usize] {
@@ -163,46 +164,29 @@ impl<T> Tensor<T> {
     /// - `dimensions`: A vector specifying the new size of each dimension.
     ///
     /// # Panics
-    /// This method will panic if the new dimensions do not match the number of elements in the
+    /// This method will panic if the new dimensions' size can't represent the elements in the
     /// tensor.
     pub fn reshape(&mut self, dimensions: &[usize]) {
-        assert_valid_dimensions(&self.data, dimensions);
+        assert_valid_shape(self.data.len(), dimensions);
         self.strides = Self::compute_strides(dimensions);
         self.dimensions.clear();
         self.dimensions.extend_from_slice(dimensions);
     }
 
-    /// Checks if the tensor is empty.
+    /// Returns the total number of elements the tensor can store with the current dimensions.
     ///
-    /// # Returns
-    /// `true` if the tensor has no elements, `false` otherwise.
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.data.is_empty()
-    }
-
-    /// Returns the total number of elements in the tensor.
-    ///
-    /// This method calculates the total number of elements by multiplying the sizes
-    /// of all dimensions. For example, a tensor with dimensions `[2, 3, 4]` will have
-    /// `2 * 3 * 4 = 24` elements.
-    /// 
     /// # Example
     ///
     /// ```
     /// use tensor::Tensor;
     ///
-    /// // Create a tensor with dimensions 2x3x4
-    /// let tensor = Tensor::new(vec![2, 3, 4], 0.0);
-    ///
-    /// // Get the total number of elements
-    /// let total_elements = tensor.len();
+    /// let tensor = Tensor::new_set(vec![2, 3, 4], 0.0);
     ///
     /// // The total number of elements is 2 * 3 * 4 = 24
-    /// assert_eq!(total_elements, 24);
+    /// assert_eq!(tensor.size(), 24);
     /// ```
     #[inline]
-    pub fn len(&self) -> usize {
+    pub fn size(&self) -> usize {
         self.dimensions.iter().product()
     }
 
@@ -210,24 +194,24 @@ impl<T> Tensor<T> {
     ///
     /// # Parameters
     ///
-    /// - `dim_index`: The index of the dimension (0-based) for which to get the size.
+    /// - `index`: The index of the dimension (0-based) for which to get the size.
     ///
     /// # Example
     ///
     /// ```
     /// use tensor::Tensor;
-    /// let tensor = Tensor::new(vec![2, 3], 0.0);
+    /// let tensor = Tensor::new_set(vec![2, 3], 0.0);
     ///
-    /// assert_eq!(tensor.len(), 6);
-    /// assert_eq!(tensor.dim_len(0), 2);
-    /// assert_eq!(tensor.dim_len(1), 3);
+    /// assert_eq!(tensor.size(), 6);
+    /// assert_eq!(tensor.dim_size(0), Some(2));
+    /// assert_eq!(tensor.dim_size(1), Some(3));
     /// ```
     #[inline]
-    pub fn dim_len(&self, dim_index: usize) -> usize {
-        match self.dimensions.get(dim_index) {
-            Some(&len) => len,
-            None => 0,
+    pub fn dim_size(&self, index: usize) -> Option<usize> {
+        if let Some(&len) = self.dimensions.get(index) {
+            return Some(len);
         }
+        None
     }
 
     /// Returns an iterator over the elements of the tensor.
@@ -309,42 +293,31 @@ where
     }
 }
 
-// Implement Display for `Tensor`
 impl<T> Display for Tensor<T>
 where
     T: Display,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        // Get the number of dimensions of the tensor
         let dim_len = self.dimensions.len();
-
-        // Tracking vector to keep track of the current indices
-        // Initialize with zeros: [0, 0, ..., 0]
-        let mut indices = vec![0; dim_len];
-
-        // Initialize the ordinal number of the element: 0, 1, 2, ...
+        let mut index = vec![0; dim_len];
         let mut ord = 0;
 
+        writeln!(f, "Shape: {:?}", self.dimensions)?;
+        writeln!(f, "Data:")?;
+
         loop {
-            // Get the value at the current indices
-            let value = self.get(&indices);
+            let value = self.get(&index);
 
-            // Write according to the format: `ord: [indices] -> value`
-            writeln!(f, "{}: {:?} -> {}", ord, indices, value)?;
+            writeln!(f, "{}: {:?} -> {}", ord, index, value)?;
 
-            // Move to the next index
             'inner: for i in (0..dim_len).rev() {
-                // Check if the current index can be incremented without exceeding the dimension size
-                if indices[i] + 1 < self.dimensions[i] {
-                    // Increment the current index
-                    indices[i] += 1;
+                if index[i] + 1 < self.dimensions[i] {
+                    index[i] += 1;
                     break 'inner;
                 } else if i == 0 {
-                    // If the first index has reached its maximum value, we are done
                     return Ok(());
                 } else {
-                    // Reset the current index to 0 and continue to the next index
-                    indices[i] = 0;
+                    index[i] = 0;
                 }
             }
             ord += 1;
