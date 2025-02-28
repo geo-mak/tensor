@@ -5,7 +5,7 @@ use proc_macro::token_stream::IntoIter;
 /// ```text
 /// Array       <- '[' Elements ']'
 /// Elements    <- '[' ElementList ']'
-/// ElementList <- Element (',' Element)*
+/// ElementList <- Element (',' Element)+
 /// Element     <- (!Elements Number) / (!Number Elements)
 /// Number      <- '-'? Digit+ ('.' Digit+)?
 /// Digit       <- [0-9]
