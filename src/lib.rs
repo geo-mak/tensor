@@ -14,4 +14,4 @@ pub use crate::tensor::Tensor;
 mod builder;
 
 #[cfg(feature = "builder")]
-pub use preprocessing::tensor_builder;
+pub use meta::tensor_builder;

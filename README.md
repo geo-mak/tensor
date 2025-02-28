@@ -44,7 +44,10 @@ This example requires feature `builder`.
 use tensor::tensor;
 
 fn main(){
-    let tensor = tensor![i32: [[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]]];
+    let tensor = tensor![f32: [
+            [[-1.0, -2.0, -3.0], [-4.0, -5.0, -6.0]],
+            [[-7.0, -8.0, -9.0], [-10.0, -11.0, -12.0]]
+        ]];
 
     assert_eq!(tensor.shape(), &[2, 2, 3]);
 }
