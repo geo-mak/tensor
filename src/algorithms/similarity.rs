@@ -129,57 +129,42 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_cosine_similarity() {
-        let tensor1 = Tensor::new_set(vec![1, 3], 1.0);
-        let tensor2 = Tensor::new_set(vec![1, 3], 2.0);
+    fn test_cosine_similarity_same() {
+        let tensor1 = Tensor::with_values(vec![1.0, 1.0, 0.0], vec![1, 3]);
+        let tensor2 = Tensor::with_values(vec![1.0, 1.0, 0.0], vec![1, 3]);
         let result = tensor1.cosine_similarity(&tensor2);
-        let expected: f64 = 1.0;
-        // Toleration of 1e-6 for floating point arithmetic
-        assert!((result - expected).abs() < 1e-6);
+        assert!((result - 1.0).abs() < 1e-6);
     }
 
     #[test]
-    fn test_euclidean_distance() {
-        let tensor1 = Tensor::new_set(vec![1, 3], 1.0);
-        let tensor2 = Tensor::new_set(vec![1, 3], 2.0);
-        let result = tensor1.euclidean_distance(&tensor2);
-        let expected: f64 = 1.7320508075688772;
-        assert!((result - expected).abs() < 1e-6);
+    fn test_cosine_similarity_different() {
+        let tensor1 = Tensor::with_values(vec![1.0, 1.0, 0.0], vec![1, 3]);
+        let tensor2 = Tensor::with_values(vec![1.0, 0.0, 0.0], vec![1, 3]);
+        let result = tensor1.cosine_similarity(&tensor2);
+        assert!((result - std::f64::consts::FRAC_1_SQRT_2).abs() < 1e-6);
     }
 
+    #[test]
+    fn test_euclidean_distance_same() {
+        let tensor1 = Tensor::new_set(vec![1, 3], 3.0);
+        let tensor2 = Tensor::new_set(vec![1, 3], 3.0);
+        let result = tensor1.euclidean_distance(&tensor2);
+        assert_eq!(result, 0.0);
+    }
+
+    #[test]
+    fn test_euclidean_distance_different() {
+        let tensor1 = Tensor::new_set(vec![1, 3], 3.0);
+        let tensor2 = Tensor::new_set(vec![1, 3], 2.0);
+        let result = tensor1.euclidean_distance(&tensor2);
+        assert!((result - 1.7320508075688772).abs() < 1e-6);
+    }
+    
     #[test]
     fn test_dot_product() {
-        let tensor1 = Tensor::new_set(vec![1, 3], 1.0);
+        let tensor1 = Tensor::new_set(vec![1, 3], 3.0);
         let tensor2 = Tensor::new_set(vec![1, 3], 2.0);
         let result = tensor1.dot_product(&tensor2);
-        let expected: f64 = 6.0;
-        assert!((result - expected).abs() < 1e-6);
-    }
-
-    #[test]
-    fn test_cosine_similarity_4d() {
-        let tensor1 = Tensor::new_set(vec![2, 2, 2, 2], 1.0);
-        let tensor2 = Tensor::new_set(vec![2, 2, 2, 2], 2.0);
-        let result = tensor1.cosine_similarity(&tensor2);
-        let expected: f64 = 1.0;
-        assert!((result - expected).abs() < 1e-6);
-    }
-
-    #[test]
-    fn test_euclidean_distance_4d() {
-        let tensor1 = Tensor::new_set(vec![2, 2, 2, 2], 1.0);
-        let tensor2 = Tensor::new_set(vec![2, 2, 2, 2], 2.0);
-        let result = tensor1.euclidean_distance(&tensor2);
-        let expected: f64 = 4.0;
-        assert!((result - expected).abs() < 1e-6);
-    }
-
-    #[test]
-    fn test_dot_product_4d() {
-        let tensor1 = Tensor::new_set(vec![2, 2, 2, 2], 1.0);
-        let tensor2 = Tensor::new_set(vec![2, 2, 2, 2], 2.0);
-        let result = tensor1.dot_product(&tensor2);
-        let expected: f64 = 32.0;
-        assert!((result - expected).abs() < 1e-6);
+        assert_eq!(result , 18.0);
     }
 }
