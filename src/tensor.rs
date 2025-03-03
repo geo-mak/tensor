@@ -173,7 +173,7 @@ impl<T> Tensor<T> {
         self.dimensions.extend_from_slice(dimensions);
     }
 
-    /// Returns the total number of elements the tensor can store with the current dimensions.
+    /// Returns the total number of elements in the tensor.
     ///
     /// # Example
     ///
@@ -181,13 +181,12 @@ impl<T> Tensor<T> {
     /// use tensor::Tensor;
     ///
     /// let tensor = Tensor::new_set(vec![2, 3, 4], 0.0);
-    ///
-    /// // The total number of elements is 2 * 3 * 4 = 24
+    /// 
     /// assert_eq!(tensor.size(), 24);
     /// ```
     #[inline]
     pub fn size(&self) -> usize {
-        self.dimensions.iter().product()
+        self.data.len()
     }
 
     /// Returns the number of elements along a specific dimension.
