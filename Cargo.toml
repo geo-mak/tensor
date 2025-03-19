@@ -1,0 +1,19 @@
+[package]
+name = "tensor"
+version = "0.1.0"
+edition = "2021"
+description = "A multidimensional tensor data structure"
+keywords = ["tensor", "ndarray", "multidimensional", "data-structure"]
+categories = ["data-structures"]
+license-file = "LICENSE"
+readme = "README.md"
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[[bench]]
+name = "benchmarks"
+harness = false
+
+[dependencies]
+meta = {path = "meta"}
