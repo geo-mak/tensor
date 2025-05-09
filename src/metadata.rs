@@ -89,7 +89,7 @@ impl<const R: usize> TensorMetaData<R> {
     }
 
     /// Computes the strides and size of the provided dimensions and returns them.
-    /// 
+    ///
     /// Returns `1` as size if `R` is `0`.
     #[must_use]
     const fn compute(dims: *const usize) -> (usize, [usize; R]) {
@@ -154,8 +154,8 @@ impl<const R: usize> TensorMetaData<R> {
             true
         }
     }
-    
-    /// Compares two instances by comparing the size first, if it is the same, it compares the 
+
+    /// Compares two instances by comparing the size first, if it is the same, it compares the
     /// dimensions element-wise from right to left.
     #[must_use]
     #[inline]

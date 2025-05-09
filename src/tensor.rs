@@ -104,20 +104,20 @@ where
     T: Display,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let len =  self.metadata.size();
+        let len = self.metadata.size();
         let shape = self.metadata.shape();
-        
+
         writeln!(f, "Shape: {:?}", shape)?;
         writeln!(f, "Data:")?;
-        
+
         let mut index = [0; R];
         let mut num = 0;
-        
+
         while num < len {
             let value = self.get(&index);
 
             writeln!(f, "{}: {:?} -> {}", num, index, value)?;
-            
+
             // Only reachable if R > 0.
             let mut i = R;
             'idx: while i != 0 {
@@ -125,7 +125,7 @@ where
                 // Try incrementing within bounds.
                 if index[i] + 1 < shape[i] {
                     index[i] += 1;
-                    break 'idx
+                    break 'idx;
                 } else if i == 0 {
                     // All dimensions have been traversed.
                     return Ok(());
@@ -136,7 +136,7 @@ where
 
             num += 1;
         }
-        
+
         // Only reachable if R == 0.
         Ok(())
     }

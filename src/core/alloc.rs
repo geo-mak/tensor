@@ -76,14 +76,13 @@ const fn debug_assert_copy_inbounds(allocated_count: usize, copy_count: usize) {
 /// `UnsafeBufferPointer` represents an indirect reference to _one or more_ values of type `T`
 /// consecutively in memory.
 ///
-/// `UnsafeBufferPointer` is a typed pointer, not a raw pointer, and it guarantees proper `size`
-/// and `alignment` of `T`, when storing or loading values, but it doesn't guarantee safe operations
-/// with measures such as null pointer checks, bounds checking, or automatic drop of initialized
-/// values.
+/// `UnsafeBufferPointer` guarantees proper `size` and `alignment` of `T`, when storing or loading 
+/// values, but it doesn't guarantee safe operations with measures such as null pointer checks or 
+/// bounds checking.
 ///
-/// `UnsafeBufferPointer` doesn't store any metadata about the allocated memory space, such as the
-/// size of the allocated memory space and the number of initialized elements, therefore it doesn't
-/// offer automatic memory management.
+/// Moreover, it doesn't store any metadata about the allocated memory space, such as the size of 
+/// the allocated memory space and the number of initialized elements, therefore it doesn't offer 
+/// automatic memory management.
 ///
 /// The user is responsible for allocating, reallocating, and deallocating memory.
 ///
@@ -95,7 +94,6 @@ const fn debug_assert_copy_inbounds(allocated_count: usize, copy_count: usize) {
 /// This pointer uses the registered `#[global_allocator]` to allocate memory.
 ///
 /// Using custom allocators will be supported in the future.
-///
 pub(crate) struct UnsafeBufferPointer<T> {
     ptr: *const T,
     _marker: PhantomData<T>,
@@ -205,7 +203,7 @@ impl<T> UnsafeBufferPointer<T> {
         let len = slice.len();
         unsafe {
             let instance = UnsafeBufferPointer::new_allocate(len);
-            core::intrinsics::copy_nonoverlapping(slice.as_ptr(), instance.ptr as *mut T, len);
+            ptr::copy_nonoverlapping(slice.as_ptr(), instance.ptr as *mut T, len);
             instance
         }
     }
@@ -310,12 +308,13 @@ impl<T> UnsafeBufferPointer<T> {
 
         let ptr = alloc(new_layout) as *mut T;
 
-        // Failure branch.
-        if branch_prediction::unlikely(ptr.is_null()) {
-            alloc::handle_alloc_error(new_layout);
+        // Success branch.
+        if branch_prediction::likely(!ptr.is_null()) {
+            self.ptr = ptr;
+            return;
         }
 
-        self.ptr = ptr;
+        alloc::handle_alloc_error(new_layout);
     }
 
     /// Deallocates the memory space pointed by the pointer.
@@ -396,7 +395,7 @@ impl<T> UnsafeBufferPointer<T> {
 
         // Success branch.
         if branch_prediction::likely(!new_ptr.is_null()) {
-            core::intrinsics::copy_nonoverlapping(self.ptr, new_ptr, copy_count);
+            ptr::copy_nonoverlapping(self.ptr, new_ptr, copy_count);
 
             let current_layout = self.make_layout(allocated_count);
 
@@ -430,7 +429,7 @@ impl<T> UnsafeBufferPointer<T> {
     ///
     /// # Time Complexity
     ///
-    /// _O_(n) where `n` is allocated count of type `T`.
+    /// _O_(n) where `n` is the `count` of values of type `T` to be written.
     ///
     #[inline(always)]
     pub(crate) unsafe fn memset_default(&mut self, count: usize)
@@ -465,7 +464,7 @@ impl<T> UnsafeBufferPointer<T> {
     ///
     /// # Time Complexity
     ///
-    /// _O_(n) where `n` is allocated count of type `T`.
+    /// _O_(n) where `n` is the `count` of values of type `T` to be written.
     ///
     #[inline(always)]
     pub(crate) unsafe fn memset(&mut self, count: usize, value: T)
@@ -574,21 +573,19 @@ impl<T> UnsafeBufferPointer<T> {
         &*self.ptr
     }
 
-    /// Reads and returns the initialized element at the specified offset `at` as bitwise copy.
+    /// Reads and returns the value at the specified offset `at`.
     ///
-    /// This method does not shift the elements to fill in the gap, all elements after the offset
-    /// will remain in place.
+    /// This method creates a bitwise copy of `T` with `move` semantics.
     ///
     /// # Safety
     ///
     /// - Pointer must be allocated before calling this method.
-    ///   Calling this method with a null pointer will cause termination with `SIGABRT`.
+    ///   Calling this method with a null ptr will cause termination with `SIGABRT`.
     ///
     /// - `at` must be within the bounds of the initialized elements.
     ///   Loading an uninitialized elements as `T` is `undefined behavior`.
     ///
-    /// - This method creates a bitwise copy of `T` with `move` semantics.
-    ///   If `T` is not a trivial type, the value at this offset can be in an invalid state after
+    /// - If `T` is not a trivial type, the value at this offset can be in an invalid state after
     ///   calling this method, because it might have been dropped by the caller.
     ///
     /// # Time Complexity
@@ -596,33 +593,34 @@ impl<T> UnsafeBufferPointer<T> {
     /// _O_(1).
     #[allow(dead_code)]
     #[inline(always)]
-    pub(crate) const unsafe fn take(&mut self, at: usize) -> T {
+    pub(crate) const unsafe fn read_for_ownership(&mut self, at: usize) -> T {
         #[cfg(debug_assertions)]
         debug_assert_allocated(self);
 
         ptr::read((self.ptr as *mut T).add(at))
     }
 
-    /// Reads and returns the initialized element at the specified offset `at` as bitwise copy,
-    /// and shifts the `count` values after `at` to fill the gap.
+    /// Reads and returns the value at the specified offset `at`, and shifts the `count` values 
+    /// after `at` to fill the gap.
+    ///
+    /// This method creates a bitwise copy of `T` with `move` semantics.
     ///
     /// # Safety
     ///
     /// - Pointer must be allocated before calling this method.
-    ///   Calling this method with a null pointer will cause termination with `SIGABRT`.
+    ///   Calling this method with a null ptr will cause termination with `SIGABRT`.
     ///
     /// - `at + count` must be within the bounds of the initialized elements.
     ///   Loading an uninitialized elements as `T` is `undefined behavior`.
     ///
-    /// - This method creates a bitwise copy of `T` with `move` semantics.
-    ///   If `T` is not a trivial type, the value at this offset can be in an invalid state after
+    /// - If `T` is not a trivial type, the value at this offset can be in an invalid state after
     ///   calling this method, because it might have been dropped by the caller.
     ///
     /// # Time Complexity
     ///
     /// _O_(n) where `n` is the number (`count`) of the elements to be shifted.
     #[allow(dead_code)]
-    pub(crate) const unsafe fn take_shift_left(&mut self, at: usize, count: usize) -> T {
+    pub(crate) const unsafe fn read_for_ownership_sl(&mut self, at: usize, count: usize) -> T {
         #[cfg(debug_assertions)]
         debug_assert_allocated(self);
 
@@ -634,7 +632,7 @@ impl<T> UnsafeBufferPointer<T> {
             value = ptr::read(src);
 
             // Shift everything down to fill in.
-            core::intrinsics::copy(dst, src, count);
+            ptr::copy(dst, src, count);
         }
 
         // The stack is now responsible for dropping the value.
@@ -688,7 +686,7 @@ impl<T> UnsafeBufferPointer<T> {
     /// - `range` must be within the bounds of the **initialized** elements.
     ///   Calling `drop` on uninitialized elements is `undefined behavior`.
     ///
-    /// - If `T` is not of trivial type, using dropped values after calling this method can cause
+    /// - If `T` is not of trivial type, using dropped values after calling this method is
     ///   `undefined behavior`.
     ///
     /// These invariants are checked in debug mode only.
@@ -763,7 +761,7 @@ impl<T> UnsafeBufferPointer<T> {
     /// Copies _bitwise_ values of type `T` from slice to the allocated memory.
     ///
     /// This method is no-op if `count` is `0`.
-    /// 
+    ///
     /// # Safety
     ///
     /// - Pointer must be allocated before calling this method.
@@ -786,7 +784,7 @@ impl<T> UnsafeBufferPointer<T> {
         #[cfg(debug_assertions)]
         debug_assert_allocated(self);
 
-        core::intrinsics::copy_nonoverlapping(slice.as_ptr(), self.ptr as *mut T, slice.len());
+        ptr::copy_nonoverlapping(slice.as_ptr(), self.ptr as *mut T, slice.len());
     }
 
     /// Creates new `UnsafeBufferPointer` and clones values in the memory space pointed to by this
@@ -849,7 +847,7 @@ impl<T> UnsafeBufferPointer<T> {
 
         let instance = UnsafeBufferPointer::new_allocate(count);
 
-        core::intrinsics::copy_nonoverlapping(self.ptr, instance.ptr as *mut T, count);
+        ptr::copy_nonoverlapping(self.ptr, instance.ptr as *mut T, count);
 
         instance
     }
@@ -861,7 +859,7 @@ impl<T> UnsafeBufferPointer<T> {
     /// the comparing range `[0, count - 1]`.
     ///
     /// Returns `true` if `count` is `0`.
-    /// 
+    ///
     /// # Safety
     ///
     /// - Both pointers must be allocated before calling this method.
@@ -1087,7 +1085,7 @@ mod ptr_tests {
                 assert_eq!(*buffer_ptr.ptr.add(i), i as u8 + 1);
             }
 
-            buffer_ptr.deallocate(3);
+            buffer_ptr.deallocate(5);
         }
     }
 
@@ -1163,7 +1161,7 @@ mod ptr_tests {
             buffer_ptr.store(1, 2);
 
             // Take the first value without shifting the elements.
-            assert_eq!(buffer_ptr.take(0), 1);
+            assert_eq!(buffer_ptr.read_for_ownership(0), 1);
 
             // The next value should remain at the offset 1.
             assert_eq!(*buffer_ptr.load(1), 2);
@@ -1182,7 +1180,7 @@ mod ptr_tests {
             buffer_ptr.store(1, 2);
 
             // Take the value and shift the elements after the offset to fill the gap.
-            assert_eq!(buffer_ptr.take_shift_left(0, 2), 1);
+            assert_eq!(buffer_ptr.read_for_ownership_sl(0, 2), 1);
 
             // Value should be removed and the next value should be at the offset 0.
             assert_eq!(*buffer_ptr.load(0), 2);
@@ -1284,8 +1282,7 @@ mod ptr_tests {
     }
 
     #[test]
-    fn test_drop_values() {
-        // Drop counter with 0 count initially.
+    fn test_buffer_ptr_drop_init() {
         let drop_count = Rc::new(RefCell::new(0));
 
         unsafe {
@@ -1354,37 +1351,7 @@ mod ptr_tests {
             buffer_ptr.deallocate(5);
         }
     }
-
-    #[test]
-    fn test_buffer_ptr_drop_values() {
-        // Drop counter with 0 count initially.
-        let drop_count = Rc::new(RefCell::new(0));
-
-        unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<DropCounter> =
-                UnsafeBufferPointer::new_allocate(3);
-
-            // Reference 3 elements to the same drop counter.
-            for i in 0..3 {
-                buffer_ptr.store(
-                    i,
-                    DropCounter {
-                        count: Rc::clone(&drop_count),
-                    },
-                );
-            }
-
-            // Drop initialized elements.
-            buffer_ptr.drop_initialized(3);
-
-            // Since the `drop` has been called, pointer should have called drop on all elements,
-            // so the drop count must be 3.
-            assert_eq!(*drop_count.borrow(), 3);
-
-            buffer_ptr.deallocate(3);
-        }
-    }
-
+    
     #[test]
     #[cfg(debug_assertions)]
     #[should_panic(expected = "Pointer must not be null")]

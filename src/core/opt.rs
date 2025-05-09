@@ -21,6 +21,7 @@ pub(crate) mod branch_prediction {
     /// Returns the value passed to it.
     ///
     /// Any use other than with `if` statements will probably not have an effect.
+    #[allow(dead_code)]
     #[inline(always)]
     pub(crate) const fn unlikely(condition: bool) -> bool {
         if condition {

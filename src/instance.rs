@@ -35,11 +35,9 @@ impl<T, const R: usize> Tensor<T, R> {
         assert_not_zst::<T>();
 
         let metadata = TensorMetaData::new(dimensions);
-        unsafe {
-            Self {
-                metadata,
-                data: UnsafeBufferPointer::new_allocate_memset(metadata.size(), value),
-            }
+        Self {
+            metadata,
+            data: unsafe { UnsafeBufferPointer::new_allocate_memset(metadata.size(), value) },
         }
     }
 
@@ -73,11 +71,9 @@ impl<T, const R: usize> Tensor<T, R> {
         assert_not_zst::<T>();
 
         let metadata = TensorMetaData::new(dimensions);
-        unsafe {
-            Self {
-                metadata,
-                data: UnsafeBufferPointer::new_allocate_default(metadata.size()),
-            }
+        Self {
+            metadata,
+            data: unsafe { UnsafeBufferPointer::new_allocate_default(metadata.size()) },
         }
     }
 
@@ -112,11 +108,9 @@ impl<T, const R: usize> Tensor<T, R> {
     {
         assert_not_zst::<T>();
 
-        unsafe {
-            Self {
-                metadata: TensorMetaData::new_cmp_eq(values.len(), dimensions),
-                data: UnsafeBufferPointer::from_slice(values),
-            }
+        Self {
+            metadata: TensorMetaData::new_cmp_eq(values.len(), dimensions),
+            data: unsafe { UnsafeBufferPointer::from_slice(values) },
         }
     }
 
@@ -148,11 +142,9 @@ impl<T, const R: usize> Tensor<T, R> {
     pub fn from_vec(dimensions: [usize; R], values: Vec<T>) -> Self {
         assert_not_zst::<T>();
 
-        unsafe {
-            Self {
-                metadata: TensorMetaData::new_cmp_eq(values.len(), dimensions),
-                data: UnsafeBufferPointer::from_vec(values),
-            }
+        Self {
+            metadata: TensorMetaData::new_cmp_eq(values.len(), dimensions),
+            data: unsafe { UnsafeBufferPointer::from_vec(values) },
         }
     }
 }
