@@ -1468,9 +1468,10 @@ mod ptr_tests {
             buffer_ptr.deallocate(values.len());
         }
     }
-
-    #[should_panic(expected = "Allocation size must be greater than 0")]
+    
     #[test]
+    #[cfg(debug_assertions)]
+    #[should_panic(expected = "Allocation size must be greater than 0")]
     fn test_from_slice_zero_len() {
         let values: [u8; 0] = [];
         unsafe {
@@ -1490,8 +1491,9 @@ mod ptr_tests {
         }
     }
 
-    #[should_panic(expected = "Allocation size must be greater than 0")]
     #[test]
+    #[cfg(debug_assertions)]
+    #[should_panic(expected = "Allocation size must be greater than 0")]
     fn test_from_vec_not_allocated() {
         unsafe {
             let _ = UnsafeBufferPointer::from_vec(vec![()]);
