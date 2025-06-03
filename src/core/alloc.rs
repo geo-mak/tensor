@@ -220,7 +220,7 @@ impl<T> UnsafeBufferPointer<T> {
     ///
     /// _O_(1).
     #[must_use]
-    #[inline]
+    #[inline(always)]
     pub(crate) unsafe fn from_vec(vec: Vec<T>) -> Self {
         #[cfg(debug_assertions)]
         debug_layout_size_align(vec.capacity() * Self::T_SIZE, Self::T_ALIGN);
@@ -253,22 +253,20 @@ impl<T> UnsafeBufferPointer<T> {
         self.ptr as *mut T
     }
 
-    /// Sets the pointer to `null` and returns the current pointer.
+    /// Returns an instance with copy of the base pointer.
     ///
     /// # Safety
     ///
     /// This method doesn't provide any guarantees about the state of the returned pointer and its
     /// allocated memory space.
-    #[allow(dead_code)]
+    ///
     #[must_use]
-    #[inline]
-    pub(crate) const unsafe fn invalidate(&mut self) -> Self {
-        let instance = UnsafeBufferPointer {
+    #[inline(always)]
+    pub(crate) const unsafe fn duplicate(&mut self) -> UnsafeBufferPointer<T> {
+        UnsafeBufferPointer {
             ptr: self.ptr,
             _marker: PhantomData,
-        };
-        self.ptr = ptr::null();
-        instance
+        }
     }
 
     /// Creates a new layout for the specified `count` of type `T`.
@@ -894,25 +892,6 @@ impl<T> UnsafeBufferPointer<T> {
     }
 }
 
-/// `UnsafeBufferPointer` can't meaningfully implement `Drop` trait, as it doesn't store any
-/// metadata about the allocated memory space.
-///
-/// This implementation is a debug-mode check to ensure that the allocated memory space is
-/// deallocated before dropping the `UnsafeBufferPointer`.
-#[cfg(debug_assertions)]
-impl<T> Drop for UnsafeBufferPointer<T> {
-    fn drop(&mut self) {
-        // The `drop` method is called automatically when the thread is panicking.
-        // If the thread is panicking, this check is skipped to avoid double panic.
-        if !std::thread::panicking() {
-            assert!(
-                self.ptr.is_null(),
-                "Pointer must be deallocated before dropping"
-            );
-        }
-    }
-}
-
 #[cfg(test)]
 mod ptr_tests {
     use super::*;
@@ -1426,16 +1405,6 @@ mod ptr_tests {
             original.deallocate(3);
             cloned.deallocate(3);
         }
-    }
-
-    #[test]
-    #[cfg(debug_assertions)]
-    #[should_panic(expected = "Pointer must be deallocated before dropping")]
-    #[cfg_attr(miri, ignore)]
-    fn test_buffer_ptr_drop() {
-        let _: UnsafeBufferPointer<u8> = unsafe { UnsafeBufferPointer::new_allocate(1) };
-
-        // Dropping the pointer without deallocating the memory space should panic.
     }
 
     #[test]

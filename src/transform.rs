@@ -39,7 +39,7 @@ impl<T, const R: usize> Tensor<T, R> {
     pub fn change_rank<const N: usize>(self, dimensions: [usize; N]) -> Tensor<T, N> {
         Tensor {
             metadata: TensorMetaData::new_cmp_eq(self.metadata.size(), dimensions),
-            data: unsafe { ManuallyDrop::new(self).data.invalidate() },
+            data: unsafe { ManuallyDrop::new(self).data.duplicate() },
         }
     }
 }
