@@ -44,18 +44,19 @@ impl TensorParser {
         group: &Group,
         values: &mut Values,
         dimensions: &mut Dimensions,
-    ) {
+    ) {        
+        let mut state = GroupState::new();
+        let mut stream = group.stream().into_iter();
+        
         // Type checking of literals is left to the type system, no enforcement here,
         // because literals' attributes are not accessible, so parsing literal as string is the
         // only way to validate types, and this is just not worth it, at least for now.
-        let span= &group.span();
-        let mut state = GroupState::new();
-        let mut stream = group.stream().into_iter();
         while let Some(member) = stream.next() {
+            let mut span = member.span();
             match member {
                 TokenTree::Group(ref g) => {
                     if g.delimiter() != Delimiter::Bracket {
-                        diagnostics::invalid_delimiter(&g.span())
+                        diagnostics::invalid_delimiter(&span)
                     }
                     Self::parse_group(level + 1, g, values, dimensions);
                     state.add(2)
@@ -67,21 +68,22 @@ impl TensorParser {
                 TokenTree::Punct(ref p)
                 if p.as_char() == '-' => {
                     if let Some(TokenTree::Literal(lit)) = stream.next() {
+                        span = lit.span();
                         values.0.push(Value::SignedLiteral(lit));
-                        state.add(1)
+                        state.add(1);
                     } else {
-                        diagnostics::unexpected_token(&member, span)
+                        diagnostics::unexpected_token(&member)
                     }
                 }
-                _ => diagnostics::unexpected_token(&member, span)
+                _ => diagnostics::unexpected_token(&member)
             }
-            Self::match_sep(span, &mut stream);
+            Self::match_sep(&span, &mut stream);
         };
 
         match state.kind {
-            0 => diagnostics::empty_array(level + 1),
-            3 => diagnostics::expected_scalars(span),
-            _ => Self::update_dimensions(level, span, state, dimensions)
+            0 => diagnostics::empty_array(level + 1, &group.span()),
+            3 => diagnostics::expected_scalars(&group.span()),
+            _ => Self::update_dimensions(level, &group.span(), state, dimensions)
         }
     }
 
@@ -117,7 +119,7 @@ impl TensorParser {
                 Delimiter::Parenthesis,
                 {
                     let param_tokens = [
-                        TokenTree::Group(Group::new(Delimiter::Bracket, dimensions.into_stream())), 
+                        TokenTree::Group(Group::new(Delimiter::Bracket, dimensions.into_stream())),
                         TokenTree::Punct(Punct::new(',', Spacing::Alone)),
                         TokenTree::Punct(Punct::new('&', Spacing::Joint)),
                         TokenTree::Group(Group::new(Delimiter::Bracket, values.into_stream())),
@@ -218,62 +220,69 @@ impl Dimensions {
 mod diagnostics {
     use super::*;
 
-    fn parse_span(span: &Span) -> String {
-        // Start line and column are unstable APIs in `proc_macro::Span` at the moment.
-        if let Some(str) = span.source_text() {
-            return str
-        }
-        String::new()
-    }
-
     pub(super) fn expected_array_expr() -> ! {
-        panic!("Syntax error: expected array expression '[...]'")
+        panic!("Syntax error: expected array expression '[...]'.")
     }
 
     pub(super) fn invalid_delimiter(span: &Span) -> ! {
         panic!(
-            "Syntax error: arrays must be delimited with square brackets '[' ']'.\nLocation: {}",
-            parse_span(span)
+            "Syntax error at {}:{}-{}: arrays must be delimited with square brackets '[' ']'.",
+            span.line(),
+            span.start().column(),
+            span.end().column()
         )
     }
 
     pub(super) fn missing_sep(span: &Span) -> ! {
         panic!(
-            "Syntax error: missing separator ','.\nLocation: {}",
-            parse_span(span)
+            "Syntax error at {}:{}: missing separator ','.",
+            span.line(),
+            span.end().column(),
         )
     }
 
-    pub(super) fn unexpected_token(token: &TokenTree, span: &Span) -> ! {
+    pub(super) fn unexpected_token(token: &TokenTree) -> ! {
+        let span = token.span();
         panic!(
-            "Syntax error: unexpected token `{}`.\nLocation: {}",
+            "Syntax error at {}:{}: unexpected token `{}`.",
+            span.line(),
+            span.column(),
             token,
-            parse_span(span)
         )
     }
 
     pub(super) fn expected_scalars(span: &Span) -> ! {
         panic!(
-            "Invalid array: expected scalars as elements but found array.\nLocation: {}",
-            parse_span(span)
-        );
+            "Invalid array at {}:{}-{}: expected scalars as elements but found array.",
+            span.line(),
+            span.start().column(),
+            span.end().column()
+        )
     }
 
-    pub(super) fn empty_array(dim: usize) -> ! {
-        panic!("Invalid array: an array in dimension {} is empty", dim)
+    pub(super) fn empty_array(dim: usize, span: &Span) -> ! {
+        panic!(
+            "Invalid array at {}:{}-{}: an array in dimension {} is empty.", 
+            span.line(),
+            span.start().column(),
+            span.end().column(),
+            dim
+        )
     }
 
     pub(super) fn inhomogeneous_shape(
         dim: usize, expected: &GroupState, found: &GroupState, span: &Span
     ) -> ! {
         panic!(
-            "Inhomogeneous tensor: expected {} {} in dimension {}, but found {} {}.\nLocation: {}",
+            "Inhomogeneous tensor: expected {} {} in dimension {}, but found {} {}.\nLocation: {}:{}-{}.",
             expected.len,
             expected.describe(),
             dim,
             found.len,
             found.describe(),
-            parse_span(span)
-        );
+            span.line(),
+            span.start().column(),
+            span.end().column()
+        )
     }
 }

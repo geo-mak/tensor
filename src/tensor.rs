@@ -107,7 +107,7 @@ where
         let len = self.metadata.size();
         let shape = self.metadata.shape();
 
-        writeln!(f, "Shape: {:?}", shape)?;
+        writeln!(f, "Shape: {shape:?}",)?;
         writeln!(f, "Data:")?;
 
         let mut index = [0; R];
@@ -116,7 +116,7 @@ where
         while num < len {
             let value = self.get(&index);
 
-            writeln!(f, "{}: {:?} -> {}", num, index, value)?;
+            writeln!(f, "{num}: {index:?} -> {value}")?;
 
             // Only reachable if R > 0.
             let mut i = R;

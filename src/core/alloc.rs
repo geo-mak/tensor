@@ -76,12 +76,12 @@ const fn debug_assert_copy_inbounds(allocated_count: usize, copy_count: usize) {
 /// `UnsafeBufferPointer` represents an indirect reference to _one or more_ values of type `T`
 /// consecutively in memory.
 ///
-/// `UnsafeBufferPointer` guarantees proper `size` and `alignment` of `T`, when storing or loading 
-/// values, but it doesn't guarantee safe operations with measures such as null pointer checks or 
+/// `UnsafeBufferPointer` guarantees proper `size` and `alignment` of `T`, when storing or loading
+/// values, but it doesn't guarantee safe operations with measures such as null pointer checks or
 /// bounds checking.
 ///
-/// Moreover, it doesn't store any metadata about the allocated memory space, such as the size of 
-/// the allocated memory space and the number of initialized elements, therefore it doesn't offer 
+/// Moreover, it doesn't store any metadata about the allocated memory space, such as the size of
+/// the allocated memory space and the number of initialized elements, therefore it doesn't offer
 /// automatic memory management.
 ///
 /// The user is responsible for allocating, reallocating, and deallocating memory.
@@ -598,7 +598,7 @@ impl<T> UnsafeBufferPointer<T> {
         ptr::read((self.ptr as *mut T).add(at))
     }
 
-    /// Reads and returns the value at the specified offset `at`, and shifts the `count` values 
+    /// Reads and returns the value at the specified offset `at`, and shifts the `count` values
     /// after `at` to fill the gap.
     ///
     /// This method creates a bitwise copy of `T` with `move` semantics.
@@ -1333,7 +1333,7 @@ mod ptr_tests {
             buffer_ptr.deallocate(5);
         }
     }
-    
+
     #[test]
     #[cfg(debug_assertions)]
     #[should_panic(expected = "Pointer must not be null")]
@@ -1437,7 +1437,7 @@ mod ptr_tests {
             buffer_ptr.deallocate(values.len());
         }
     }
-    
+
     #[test]
     #[cfg(debug_assertions)]
     #[should_panic(expected = "Allocation size must be greater than 0")]
