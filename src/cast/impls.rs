@@ -17,7 +17,7 @@ impl<T, const R: usize> Tensor<T, R> {
 
             let mut i = 0;
             while i < len {
-                match data.load(i).try_cast() {
+                match data.access(i).try_cast() {
                     Ok(u_i) => {
                         result.store(i, u_i);
                     }

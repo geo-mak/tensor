@@ -76,7 +76,7 @@ const fn debug_assert_copy_inbounds(allocated_count: usize, copy_count: usize) {
 /// `UnsafeBufferPointer` represents an indirect reference to _one or more_ values of type `T`
 /// consecutively in memory.
 ///
-/// `UnsafeBufferPointer` guarantees proper `size` and `alignment` of `T`, when storing or loading
+/// `UnsafeBufferPointer` guarantees proper `size` and `alignment` of `T`, when storing or accessing
 /// values, but it doesn't guarantee safe operations with measures such as null pointer checks or
 /// bounds checking.
 ///
@@ -512,7 +512,7 @@ impl<T> UnsafeBufferPointer<T> {
     ///   Calling this method with a null pointer will cause termination with `SIGSEGV`.
     ///
     /// - `at` must be within the bounds of the initialized elements.
-    ///   Loading an uninitialized elements as `T` is `undefined behavior`.
+    ///   Accessing an uninitialized elements as `T` is `undefined behavior`.
     ///
     /// # Time Complexity
     ///
@@ -520,7 +520,7 @@ impl<T> UnsafeBufferPointer<T> {
     ///
     #[must_use]
     #[inline(always)]
-    pub(crate) const unsafe fn load(&self, at: usize) -> &T {
+    pub(crate) const unsafe fn access(&self, at: usize) -> &T {
         #[cfg(debug_assertions)]
         debug_assert_allocated(self);
 
@@ -535,7 +535,7 @@ impl<T> UnsafeBufferPointer<T> {
     ///   Calling this method with a null pointer will cause termination with `SIGSEGV`.
     ///
     /// - `at` must be within the bounds of the initialized elements.
-    ///   Loading an uninitialized elements as `T` is `undefined behavior`.
+    ///   Accessing an uninitialized elements as `T` is `undefined behavior`.
     ///
     /// # Time Complexity
     ///
@@ -543,7 +543,7 @@ impl<T> UnsafeBufferPointer<T> {
     ///
     #[must_use]
     #[inline(always)]
-    pub(crate) const unsafe fn load_mut(&mut self, at: usize) -> &mut T {
+    pub(crate) const unsafe fn access_mut(&mut self, at: usize) -> &mut T {
         #[cfg(debug_assertions)]
         debug_assert_allocated(self);
 
@@ -564,7 +564,7 @@ impl<T> UnsafeBufferPointer<T> {
     #[allow(dead_code)]
     #[must_use]
     #[inline(always)]
-    pub(crate) const unsafe fn load_first(&self) -> &T {
+    pub(crate) const unsafe fn access_first(&self) -> &T {
         #[cfg(debug_assertions)]
         debug_assert_allocated(self);
 
@@ -717,7 +717,7 @@ impl<T> UnsafeBufferPointer<T> {
     ///   Calling this method with a null pointer will cause termination with `SIGABRT`.
     ///
     /// - `count` must be within the bounds of the initialized elements.
-    ///   Loading an uninitialized elements as `T` is `undefined behavior`.
+    ///   Accessing an uninitialized elements as `T` is `undefined behavior`.
     ///
     /// # Time Complexity
     ///
@@ -742,7 +742,7 @@ impl<T> UnsafeBufferPointer<T> {
     ///   Calling this method with a null pointer will cause termination with `SIGABRT`.
     ///
     /// - `count` must be within the bounds of the initialized elements.
-    ///   Loading an uninitialized elements as `T` is `undefined behavior`.
+    ///   Accessing an uninitialized elements as `T` is `undefined behavior`.
     ///
     /// # Time Complexity
     ///
@@ -864,7 +864,7 @@ impl<T> UnsafeBufferPointer<T> {
     ///   Calling this method with a null pointer will cause termination with `SIGABRT`.
     ///
     /// - `count` must be within the bounds of the initialized elements.
-    ///   Loading an uninitialized elements as `T` is `undefined behavior`.
+    ///   Accessing an uninitialized elements as `T` is `undefined behavior`.
     ///
     /// # Time Complexity
     ///
@@ -1082,7 +1082,7 @@ mod ptr_tests {
     }
 
     #[test]
-    fn test_buffer_ptr_store_load() {
+    fn test_buffer_ptr_store_access() {
         unsafe {
             let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new_allocate(3);
 
@@ -1091,16 +1091,16 @@ mod ptr_tests {
                 buffer_ptr.store(i, i as u8 + 1);
             }
 
-            assert_eq!(*buffer_ptr.load(0), 1);
-            assert_eq!(*buffer_ptr.load(1), 2);
-            assert_eq!(*buffer_ptr.load(2), 3);
+            assert_eq!(*buffer_ptr.access(0), 1);
+            assert_eq!(*buffer_ptr.access(1), 2);
+            assert_eq!(*buffer_ptr.access(2), 3);
 
             buffer_ptr.deallocate(3);
         }
     }
 
     #[test]
-    fn test_buffer_ptr_load_mut() {
+    fn test_buffer_ptr_access_mut() {
         unsafe {
             let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new_allocate(3);
 
@@ -1109,23 +1109,23 @@ mod ptr_tests {
             buffer_ptr.store(1, 2);
 
             // Mutate the value.
-            *buffer_ptr.load_mut(0) = 10;
+            *buffer_ptr.access_mut(0) = 10;
 
             // Value should be updated.
-            assert_eq!(*buffer_ptr.load(0), 10);
+            assert_eq!(*buffer_ptr.access(0), 10);
 
             buffer_ptr.deallocate(3);
         }
     }
 
     #[test]
-    fn test_buffer_ptr_load_first() {
+    fn test_buffer_ptr_access_first() {
         unsafe {
             let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new_allocate(3);
             buffer_ptr.store(0, 1);
             buffer_ptr.store(1, 2);
 
-            assert_eq!(buffer_ptr.load_first(), &1);
+            assert_eq!(buffer_ptr.access_first(), &1);
 
             buffer_ptr.deallocate(3);
         }
@@ -1144,7 +1144,7 @@ mod ptr_tests {
             assert_eq!(buffer_ptr.read_for_ownership(0), 1);
 
             // The next value should remain at the offset 1.
-            assert_eq!(*buffer_ptr.load(1), 2);
+            assert_eq!(*buffer_ptr.access(1), 2);
 
             buffer_ptr.deallocate(3);
         }
@@ -1163,7 +1163,7 @@ mod ptr_tests {
             assert_eq!(buffer_ptr.read_for_ownership_sl(0, 2), 1);
 
             // Value should be removed and the next value should be at the offset 0.
-            assert_eq!(*buffer_ptr.load(0), 2);
+            assert_eq!(*buffer_ptr.access(0), 2);
 
             buffer_ptr.deallocate(3);
         }
@@ -1358,16 +1358,16 @@ mod ptr_tests {
             assert_ne!(copied.ptr.addr(), original.ptr.addr());
 
             for i in 0..3 {
-                assert_eq!(*copied.load(i), *original.load(i));
+                assert_eq!(*copied.access(i), *original.access(i));
             }
 
-            *original.load_mut(0) = 10;
-            assert_eq!(*original.load(0), 10);
-            assert_eq!(*copied.load(0), 1);
+            *original.access_mut(0) = 10;
+            assert_eq!(*original.access(0), 10);
+            assert_eq!(*copied.access(0), 1);
 
-            *copied.load_mut(0) = 11;
-            assert_eq!(*copied.load(0), 11);
-            assert_eq!(*original.load(0), 10);
+            *copied.access_mut(0) = 11;
+            assert_eq!(*copied.access(0), 11);
+            assert_eq!(*original.access(0), 10);
 
             original.deallocate(3);
             copied.deallocate(3);
@@ -1388,16 +1388,16 @@ mod ptr_tests {
             assert_ne!(cloned.ptr.addr(), original.ptr.addr());
 
             for i in 0..3 {
-                assert_eq!(**cloned.load(i), **original.load(i));
+                assert_eq!(**cloned.access(i), **original.access(i));
             }
 
-            original.load_mut(0).push('0');
-            assert_eq!(original.load(0), "10");
-            assert_eq!(cloned.load(0), "1");
+            original.access_mut(0).push('0');
+            assert_eq!(original.access(0), "10");
+            assert_eq!(cloned.access(0), "1");
 
-            cloned.load_mut(0).push('1');
-            assert_eq!(cloned.load(0), "11");
-            assert_eq!(original.load(0), "10");
+            cloned.access_mut(0).push('1');
+            assert_eq!(cloned.access(0), "11");
+            assert_eq!(original.access(0), "10");
 
             original.drop_initialized(3);
             cloned.drop_initialized(3);
@@ -1432,7 +1432,7 @@ mod ptr_tests {
         unsafe {
             let mut buffer_ptr = UnsafeBufferPointer::from_slice(&values);
             for (i, &value) in values.iter().enumerate() {
-                assert_eq!(*buffer_ptr.load(i), value);
+                assert_eq!(*buffer_ptr.access(i), value);
             }
             buffer_ptr.deallocate(values.len());
         }
@@ -1454,7 +1454,7 @@ mod ptr_tests {
         unsafe {
             let mut buffer_ptr = UnsafeBufferPointer::from_vec(values.clone());
             for (i, &value) in values.iter().enumerate() {
-                assert_eq!(*buffer_ptr.load(i), value);
+                assert_eq!(*buffer_ptr.access(i), value);
             }
             buffer_ptr.deallocate(values.len());
         }

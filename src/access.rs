@@ -34,7 +34,7 @@ impl<T, const R: usize> Tensor<T, R> {
     #[inline]
     pub const fn get(&self, index: &[usize; R]) -> &T {
         let offset = self.metadata.offset(index.as_ptr());
-        unsafe { self.data.load(offset) }
+        unsafe { self.data.access(offset) }
     }
 
     /// Returns the shape (dimensions) of the tensor.
@@ -122,7 +122,7 @@ impl<T, const R: usize> Index<&[usize; R]> for Tensor<T, R> {
     #[inline]
     fn index(&self, index: &[usize; R]) -> &Self::Output {
         let offset = self.metadata.offset(index.as_ptr());
-        unsafe { self.data.load(offset) }
+        unsafe { self.data.access(offset) }
     }
 }
 
@@ -139,7 +139,7 @@ impl<T, const R: usize> IndexMut<&[usize; R]> for Tensor<T, R> {
     #[inline]
     fn index_mut(&mut self, index: &[usize; R]) -> &mut Self::Output {
         let offset = self.metadata.offset(index.as_ptr());
-        unsafe { self.data.load_mut(offset) }
+        unsafe { self.data.access_mut(offset) }
     }
 }
 

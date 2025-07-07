@@ -21,8 +21,8 @@ impl<T, const R: usize> Tensor<T, R> {
         unsafe {
             let mut i = 0;
             while i < len {
-                let a_i = *a.load(i);
-                let b_i = *b.load(i);
+                let a_i = *a.access(i);
+                let b_i = *b.access(i);
                 product += a_i * b_i;
                 i += 1;
             }
@@ -49,8 +49,8 @@ impl<T, const R: usize> Tensor<T, R> {
         unsafe {
             let mut i = 0;
             while i < len {
-                let a_i = *a.load(i);
-                let b_i = *b.load(i);
+                let a_i = *a.access(i);
+                let b_i = *b.access(i);
                 product_a_b += a_i * b_i;
                 sum_exp_a += a_i * a_i;
                 sum_exp_b += b_i * b_i;
@@ -85,8 +85,8 @@ impl<T, const R: usize> Tensor<T, R> {
         unsafe {
             let mut i = 0;
             while i < len {
-                let a_i = *a.load(i);
-                let b_i = *b.load(i);
+                let a_i = *a.access(i);
+                let b_i = *b.access(i);
                 let delta = a_i - b_i;
                 sum += delta * delta;
                 i += 1;
