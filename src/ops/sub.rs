@@ -1,7 +1,7 @@
 use core::ops::Sub;
 
 use crate::assertions::assert_same_shape;
-use crate::core::alloc::UnsafeBufferPointer;
+use crate::core::alloc::MemorySpace;
 use crate::Tensor;
 
 /// Subtracts `n` values of `b` from `a` and writes result to `r`.
@@ -48,13 +48,13 @@ where
         assert_same_shape(self, other);
 
         let len = self.metadata.size();
-        let a = self.data.raw_ptr();
-        let b = other.data.raw_ptr();
+        let a = self.data.ptr();
+        let b = other.data.ptr();
 
         unsafe {
-            let result = UnsafeBufferPointer::new_allocate(len);
+            let result = MemorySpace::new_allocate(len);
 
-            sub(len, a, b, result.raw_ptr_mut());
+            sub(len, a, b, result.ptr_mut());
 
             Tensor {
                 metadata: self.metadata,
@@ -91,8 +91,8 @@ where
         assert_same_shape(self, other);
 
         let len = self.metadata.size();
-        let a = self.data.raw_ptr_mut();
-        let b = other.data.raw_ptr();
+        let a = self.data.ptr_mut();
+        let b = other.data.ptr();
 
         unsafe {
             sub(len, a, b, a);
@@ -137,12 +137,12 @@ where
     fn sub(self, value: T) -> Tensor<T, R> {
         // len is assumed to be > 0.
         let len = self.metadata.size();
-        let a = self.data.raw_ptr();
+        let a = self.data.ptr();
 
         unsafe {
-            let result = UnsafeBufferPointer::new_allocate(len);
+            let result = MemorySpace::new_allocate(len);
 
-            sub_value(len, a, value, result.raw_ptr_mut());
+            sub_value(len, a, value, result.ptr_mut());
 
             Tensor {
                 metadata: self.metadata,
@@ -174,7 +174,7 @@ where
     fn sub(self, value: T) {
         // len is assumed to be > 0.
         let len = self.metadata.size();
-        let a = self.data.raw_ptr_mut();
+        let a = self.data.ptr_mut();
 
         unsafe { sub_value(len, a, value, a) }
     }

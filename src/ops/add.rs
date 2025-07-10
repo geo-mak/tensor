@@ -1,7 +1,7 @@
 use core::ops::Add;
 
 use crate::assertions::assert_same_shape;
-use crate::core::alloc::UnsafeBufferPointer;
+use crate::core::alloc::MemorySpace;
 use crate::Tensor;
 
 /// Adds `n` values of `a` to `b` and writes result to `r`.
@@ -50,13 +50,13 @@ where
 
         // len is assumed to be > 0.
         let len = self.metadata.size();
-        let a = self.data.raw_ptr();
-        let b = other.data.raw_ptr();
+        let a = self.data.ptr();
+        let b = other.data.ptr();
 
         unsafe {
-            let result = UnsafeBufferPointer::new_allocate(len);
+            let result = MemorySpace::new_allocate(len);
 
-            add(len, a, b, result.raw_ptr_mut());
+            add(len, a, b, result.ptr_mut());
 
             Tensor {
                 metadata: self.metadata,
@@ -93,8 +93,8 @@ where
         assert_same_shape(self, other);
 
         let len = self.metadata.size();
-        let a = self.data.raw_ptr_mut();
-        let b = other.data.raw_ptr();
+        let a = self.data.ptr_mut();
+        let b = other.data.ptr();
 
         unsafe {
             add(len, a, b, a);
@@ -138,12 +138,12 @@ where
     /// assert_eq!(result.get(&[1, 2]), &3);
     fn add(self, value: T) -> Tensor<T, R> {
         let len = self.metadata.size();
-        let a = self.data.raw_ptr();
+        let a = self.data.ptr();
 
         unsafe {
-            let result = UnsafeBufferPointer::new_allocate(len);
+            let result = MemorySpace::new_allocate(len);
 
-            add_value(len, a, value, result.raw_ptr_mut());
+            add_value(len, a, value, result.ptr_mut());
 
             Tensor {
                 metadata: self.metadata,
@@ -174,7 +174,7 @@ where
     /// assert_eq!(tensor.get(&[1, 2]), &3);
     fn add(self, value: T) {
         let len = self.metadata.size();
-        let a = self.data.raw_ptr_mut();
+        let a = self.data.ptr_mut();
 
         unsafe {
             add_value(len, a, value, a);

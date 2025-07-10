@@ -1,6 +1,6 @@
 use core::ops::Neg;
 
-use crate::core::alloc::UnsafeBufferPointer;
+use crate::core::alloc::MemorySpace;
 use crate::Tensor;
 
 /// Negates `n` values of `a`, and writes result to `r`.
@@ -41,11 +41,11 @@ where
     fn neg(self) -> Self::Output {
         // len is assumed to be > 0.
         let len = self.metadata.size();
-        let a = self.data.raw_ptr();
+        let a = self.data.ptr();
         unsafe {
-            let result = UnsafeBufferPointer::new_allocate(len);
+            let result = MemorySpace::new_allocate(len);
 
-            neg(len, a, result.raw_ptr_mut());
+            neg(len, a, result.ptr_mut());
 
             Tensor {
                 metadata: self.metadata,
@@ -77,7 +77,7 @@ where
     /// ```
     fn neg(self) {
         let len = self.metadata.size();
-        let a = self.data.raw_ptr_mut();
+        let a = self.data.ptr_mut();
         unsafe { neg(len, a, a) }
     }
 }

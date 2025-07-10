@@ -42,7 +42,7 @@ const fn debug_layout_size_align(size: usize, align: usize) {
 /// - The pointer must not be null.
 ///
 #[cfg(debug_assertions)]
-const fn debug_assert_allocated<T>(instance: &UnsafeBufferPointer<T>) {
+const fn debug_assert_allocated<T>(instance: &MemorySpace<T>) {
     assert!(!instance.ptr.is_null(), "Pointer must not be null");
 }
 
@@ -54,7 +54,7 @@ const fn debug_assert_allocated<T>(instance: &UnsafeBufferPointer<T>) {
 /// - The pointer must be null.
 ///
 #[cfg(debug_assertions)]
-const fn debug_assert_not_allocated<T>(instance: &UnsafeBufferPointer<T>) {
+const fn debug_assert_not_allocated<T>(instance: &MemorySpace<T>) {
     assert!(instance.ptr.is_null(), "Pointer must be null");
 }
 
@@ -73,10 +73,10 @@ const fn debug_assert_copy_inbounds(allocated_count: usize, copy_count: usize) {
     );
 }
 
-/// `UnsafeBufferPointer` represents an indirect reference to _one or more_ values of type `T`
+/// `MemorySpace` represents an indirect reference to _one or more_ values of type `T`
 /// consecutively in memory.
 ///
-/// `UnsafeBufferPointer` guarantees proper `size` and `alignment` of `T`, when storing or accessing
+/// `MemorySpace` guarantees proper `size` and `alignment` of `T`, when storing or accessing
 /// values, but it doesn't guarantee safe operations with measures such as null pointer checks or
 /// bounds checking.
 ///
@@ -91,32 +91,32 @@ const fn debug_assert_copy_inbounds(allocated_count: usize, copy_count: usize) {
 ///
 /// Limited checks for invariants are done in debug mode only.
 ///
-/// This pointer uses the registered `#[global_allocator]` to allocate memory.
+/// `MemorySpace` uses the registered `#[global_allocator]` to allocate memory.
 ///
 /// Using custom allocators will be supported in the future.
-pub(crate) struct UnsafeBufferPointer<T> {
+pub(crate) struct MemorySpace<T> {
     ptr: *const T,
     _marker: PhantomData<T>,
 }
 
-impl<T> UnsafeBufferPointer<T> {
+impl<T> MemorySpace<T> {
     pub(crate) const T_SIZE: usize = size_of::<T>();
     pub(crate) const T_ALIGN: usize = align_of::<T>();
 
-    /// Creates a new `UnsafeBufferPointer` without allocating memory.
+    /// Creates a new `MemorySpace` without allocating memory.
     ///
     /// The pointer is set to `null`.
     ///
     #[must_use]
     #[inline]
     pub(crate) const fn new() -> Self {
-        UnsafeBufferPointer {
+        MemorySpace {
             ptr: ptr::null(),
             _marker: PhantomData,
         }
     }
 
-    /// Creates a new `UnsafeBufferPointer` with the specified `count`.
+    /// Creates a new `MemorySpace` with the specified `count`.
     ///
     /// Memory is allocated for the specified `count` of type `T`.
     ///
@@ -137,7 +137,7 @@ impl<T> UnsafeBufferPointer<T> {
         instance
     }
 
-    /// Creates a new `UnsafeBufferPointer` with the specified `count` of type `T` and populates
+    /// Creates a new `MemorySpace` with the specified `count` of type `T` and populates
     /// it with the default value of `T`.
     ///
     /// # Safety
@@ -161,7 +161,7 @@ impl<T> UnsafeBufferPointer<T> {
         instance
     }
 
-    /// Creates a new `UnsafeBufferPointer` with the specified `count` of type `T` and populates
+    /// Creates a new `MemorySpace` with the specified `count` of type `T` and populates
     /// it with the provided value.
     ///
     /// # Safety
@@ -185,7 +185,7 @@ impl<T> UnsafeBufferPointer<T> {
         instance
     }
 
-    /// Creates a new `UnsafeBufferPointer` from slice.
+    /// Creates a new `MemorySpace` from slice.
     ///
     /// # Safety
     ///
@@ -202,13 +202,13 @@ impl<T> UnsafeBufferPointer<T> {
     {
         let len = slice.len();
         unsafe {
-            let instance = UnsafeBufferPointer::new_allocate(len);
+            let instance = MemorySpace::new_allocate(len);
             ptr::copy_nonoverlapping(slice.as_ptr(), instance.ptr as *mut T, len);
             instance
         }
     }
 
-    /// Creates a new `UnsafeBufferPointer` from vector.
+    /// Creates a new `MemorySpace` from vector.
     ///
     /// Allocator must be `Global`. Custom allocators are not supported.
     ///
@@ -225,13 +225,13 @@ impl<T> UnsafeBufferPointer<T> {
         #[cfg(debug_assertions)]
         debug_layout_size_align(vec.capacity() * Self::T_SIZE, Self::T_ALIGN);
 
-        UnsafeBufferPointer {
+        MemorySpace {
             ptr: ManuallyDrop::new(vec).as_ptr(),
             _marker: PhantomData,
         }
     }
 
-    /// Checks if the `UnsafeBufferPointer` is null.
+    /// Checks if the pointer of `MemorySpace` is null.
     #[allow(dead_code)]
     #[must_use]
     #[inline(always)]
@@ -242,14 +242,14 @@ impl<T> UnsafeBufferPointer<T> {
     /// Returns the base pointer of the buffer as raw pointer.
     #[must_use]
     #[inline(always)]
-    pub(crate) const fn raw_ptr(&self) -> *const T {
+    pub(crate) const fn ptr(&self) -> *const T {
         self.ptr
     }
 
     /// Returns the base pointer of the buffer as mutable raw pointer.
     #[must_use]
     #[inline(always)]
-    pub(crate) const fn raw_ptr_mut(&self) -> *mut T {
+    pub(crate) const fn ptr_mut(&self) -> *mut T {
         self.ptr as *mut T
     }
 
@@ -262,8 +262,8 @@ impl<T> UnsafeBufferPointer<T> {
     ///
     #[must_use]
     #[inline(always)]
-    pub(crate) const unsafe fn duplicate(&mut self) -> UnsafeBufferPointer<T> {
-        UnsafeBufferPointer {
+    pub(crate) const unsafe fn duplicate(&mut self) -> MemorySpace<T> {
+        MemorySpace {
             ptr: self.ptr,
             _marker: PhantomData,
         }
@@ -556,7 +556,7 @@ impl<T> UnsafeBufferPointer<T> {
     ///
     /// This method checks for out of bounds access in debug mode only.
     ///
-    /// The caller must ensure that the `UnsafeBufferPointer` is not empty.
+    /// The caller must ensure that the `MemorySpace` is not empty.
     ///
     /// # Time Complexity
     ///
@@ -785,8 +785,8 @@ impl<T> UnsafeBufferPointer<T> {
         ptr::copy_nonoverlapping(slice.as_ptr(), self.ptr as *mut T, slice.len());
     }
 
-    /// Creates new `UnsafeBufferPointer` and clones values in the memory space pointed to by this
-    /// pointer to the memory space pointed to by the new pointer.
+    /// Creates new `MemorySpace` and clones values from the current memory space
+    /// to the new memory space.
     ///
     /// # Safety
     ///
@@ -820,8 +820,8 @@ impl<T> UnsafeBufferPointer<T> {
         instance
     }
 
-    /// Creates new `UnsafeBufferPointer` and copies _bitwise_ values in the memory space pointed
-    /// to by this pointer to the memory space pointed to by the new pointer.
+    /// Creates new `MemorySpace` and copies _bitwise_ values from the current memory space
+    /// to the new memory space.
     ///
     /// # Safety
     ///
@@ -843,7 +843,7 @@ impl<T> UnsafeBufferPointer<T> {
         #[cfg(debug_assertions)]
         debug_assert_allocated(self);
 
-        let instance = UnsafeBufferPointer::new_allocate(count);
+        let instance = MemorySpace::new_allocate(count);
 
         ptr::copy_nonoverlapping(self.ptr, instance.ptr as *mut T, count);
 
@@ -897,73 +897,72 @@ mod ptr_tests {
     use super::*;
 
     #[test]
-    fn test_buffer_ptr_new() {
-        let buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new();
-        assert!(buffer_ptr.is_null());
+    fn test_mem_space_new() {
+        let mem_space: MemorySpace<u8> = MemorySpace::new();
+        assert!(mem_space.is_null());
     }
 
     #[test]
-    fn test_buffer_ptr_new_allocate() {
+    fn test_mem_space_new_allocate() {
         unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new_allocate(3);
+            let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(3);
 
             // Memory space should have been allocated.
-            assert!(!buffer_ptr.is_null());
+            assert!(!mem_space.is_null());
 
-            buffer_ptr.deallocate(3);
+            mem_space.deallocate(3);
         }
     }
 
     #[test]
     #[cfg(debug_assertions)]
     #[should_panic(expected = "Allocation size must be greater than 0")]
-    fn test_buffer_ptr_new_allocate_zero_size() {
+    fn test_mem_space_new_allocate_zero_size() {
         // count is 0, should panic.
-        let _: UnsafeBufferPointer<u8> = unsafe { UnsafeBufferPointer::new_allocate(0) };
+        let _: MemorySpace<u8> = unsafe { MemorySpace::new_allocate(0) };
     }
 
     #[test]
     #[cfg(debug_assertions)]
     #[should_panic(expected = "Allocation size exceeds maximum limit on this platform")]
-    fn test_buffer_ptr_new_allocate_overflow() {
-        let _: UnsafeBufferPointer<u8> =
-            unsafe { UnsafeBufferPointer::new_allocate(isize::MAX as usize + 1) };
+    fn test_mem_space_new_allocate_overflow() {
+        let _: MemorySpace<u8> = unsafe { MemorySpace::new_allocate(isize::MAX as usize + 1) };
     }
 
     #[test]
-    fn test_buffer_ptr_allocate() {
-        let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new();
+    fn test_mem_space_allocate() {
+        let mut mem_space: MemorySpace<u8> = MemorySpace::new();
 
         unsafe {
-            buffer_ptr.allocate(3);
+            mem_space.allocate(3);
 
-            assert!(!buffer_ptr.is_null());
+            assert!(!mem_space.is_null());
 
-            buffer_ptr.deallocate(3);
+            mem_space.deallocate(3);
         }
     }
 
     #[test]
     #[cfg(debug_assertions)]
     #[should_panic(expected = "Allocation size must be greater than 0")]
-    fn test_buffer_ptr_allocate_zero_size() {
-        let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new();
+    fn test_mem_space_allocate_zero_size() {
+        let mut mem_space: MemorySpace<u8> = MemorySpace::new();
 
         // count must be greater than 0, should panic.
         unsafe {
-            buffer_ptr.allocate(0);
+            mem_space.allocate(0);
         }
     }
 
     #[test]
     #[cfg(debug_assertions)]
     #[should_panic(expected = "Allocation size exceeds maximum limit on this platform")]
-    fn test_buffer_ptr_allocate_overflow() {
-        let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new();
+    fn test_mem_space_allocate_overflow() {
+        let mut mem_space: MemorySpace<u8> = MemorySpace::new();
 
         // Size exceeds maximum limit, should panic.
         unsafe {
-            buffer_ptr.allocate(isize::MAX as usize + 1);
+            mem_space.allocate(isize::MAX as usize + 1);
         }
     }
 
@@ -971,16 +970,16 @@ mod ptr_tests {
     #[cfg(debug_assertions)]
     #[should_panic(expected = "Pointer must be null")]
     #[cfg_attr(miri, ignore)]
-    fn test_buffer_ptr_allocate_allocated() {
-        let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new();
+    fn test_mem_space_allocate_allocated() {
+        let mut mem_space: MemorySpace<u8> = MemorySpace::new();
         unsafe {
             // Not yet allocated, should not panic.
-            buffer_ptr.allocate(1);
+            mem_space.allocate(1);
 
-            assert!(!buffer_ptr.is_null());
+            assert!(!mem_space.is_null());
 
             // Already allocated, should panic.
-            buffer_ptr.allocate(2);
+            mem_space.allocate(2);
         }
     }
 
@@ -997,45 +996,44 @@ mod ptr_tests {
     }
 
     #[test]
-    fn test_buffer_ptr_memset_default() {
+    fn test_mem_space_memset_default() {
         unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<Choice> = UnsafeBufferPointer::new_allocate(3);
+            let mut mem_space: MemorySpace<Choice> = MemorySpace::new_allocate(3);
 
             // Set all elements to the default value of `Choice`.
-            buffer_ptr.memset_default(3);
+            mem_space.memset_default(3);
 
             // Values were uninit, so they should be set to `Default`.
             for i in 0..3 {
-                assert!(matches!(*buffer_ptr.ptr.add(i), Choice::Default))
+                assert!(matches!(*mem_space.ptr.add(i), Choice::Default))
             }
 
-            buffer_ptr.deallocate(3);
+            mem_space.deallocate(3);
         }
     }
 
     #[test]
-    fn test_buffer_ptr_new_allocate_default() {
+    fn test_mem_space_new_allocate_default() {
         unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<Choice> =
-                UnsafeBufferPointer::new_allocate_default(3);
+            let mut mem_space: MemorySpace<Choice> = MemorySpace::new_allocate_default(3);
 
             // Memory space should have been allocated.
-            assert!(!buffer_ptr.is_null());
+            assert!(!mem_space.is_null());
 
             // All elements are must have been initialized to their default values.
             for i in 0..3 {
-                assert!(matches!(*buffer_ptr.ptr.add(i), Choice::Default))
+                assert!(matches!(*mem_space.ptr.add(i), Choice::Default))
             }
 
-            buffer_ptr.deallocate(3);
+            mem_space.deallocate(3);
         }
     }
 
     #[test]
     #[cfg(debug_assertions)]
     #[should_panic(expected = "Allocation size must be greater than 0")]
-    fn test_buffer_ptr_new_allocate_default_zero_count() {
-        let _: UnsafeBufferPointer<u8> = unsafe { UnsafeBufferPointer::new_allocate_default(0) };
+    fn test_mem_space_new_allocate_default_zero_count() {
+        let _: MemorySpace<u8> = unsafe { MemorySpace::new_allocate_default(0) };
 
         // count is 0, no allocation should have been made.
     }
@@ -1043,206 +1041,206 @@ mod ptr_tests {
     #[test]
     #[cfg(debug_assertions)]
     #[should_panic(expected = "Allocation size exceeds maximum limit on this platform")]
-    fn test_buffer_ptr_new_allocate_default_overflow() {
-        let _: UnsafeBufferPointer<u8> =
-            unsafe { UnsafeBufferPointer::new_allocate_default(isize::MAX as usize + 1) };
+    fn test_mem_space_new_allocate_default_overflow() {
+        let _: MemorySpace<u8> =
+            unsafe { MemorySpace::new_allocate_default(isize::MAX as usize + 1) };
     }
 
     #[test]
-    fn test_buffer_ptr_reallocate() {
+    fn test_mem_space_reallocate() {
         unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new_allocate(3);
+            let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(3);
 
-            *(buffer_ptr.ptr as *mut u8) = 1;
-            *(buffer_ptr.ptr as *mut u8).add(1) = 2;
-            *(buffer_ptr.ptr as *mut u8).add(2) = 3;
+            *(mem_space.ptr as *mut u8) = 1;
+            *(mem_space.ptr as *mut u8).add(1) = 2;
+            *(mem_space.ptr as *mut u8).add(2) = 3;
 
             // Grows the count to 5.
-            buffer_ptr.reallocate(3, 5, 3);
+            mem_space.reallocate(3, 5, 3);
 
             // Check values after reallocation.
             for i in 0..3 {
-                assert_eq!(*buffer_ptr.ptr.add(i), i as u8 + 1);
+                assert_eq!(*mem_space.ptr.add(i), i as u8 + 1);
             }
 
-            buffer_ptr.deallocate(5);
+            mem_space.deallocate(5);
         }
     }
 
     #[test]
     #[cfg(debug_assertions)]
     #[should_panic(expected = "Pointer must not be null")]
-    fn test_buffer_ptr_reallocate_null_ptr() {
-        let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new();
+    fn test_mem_space_reallocate_null_ptr() {
+        let mut mem_space: MemorySpace<u8> = MemorySpace::new();
 
         // Not yet allocated, should panic.
         unsafe {
-            buffer_ptr.reallocate(5, 10, 5);
+            mem_space.reallocate(5, 10, 5);
         }
     }
 
     #[test]
-    fn test_buffer_ptr_store_access() {
+    fn test_mem_space_store_access() {
         unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new_allocate(3);
+            let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(3);
 
             // Store some values.
             for i in 0..3 {
-                buffer_ptr.store(i, i as u8 + 1);
+                mem_space.store(i, i as u8 + 1);
             }
 
-            assert_eq!(*buffer_ptr.access(0), 1);
-            assert_eq!(*buffer_ptr.access(1), 2);
-            assert_eq!(*buffer_ptr.access(2), 3);
+            assert_eq!(*mem_space.access(0), 1);
+            assert_eq!(*mem_space.access(1), 2);
+            assert_eq!(*mem_space.access(2), 3);
 
-            buffer_ptr.deallocate(3);
+            mem_space.deallocate(3);
         }
     }
 
     #[test]
-    fn test_buffer_ptr_access_mut() {
+    fn test_mem_space_access_mut() {
         unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new_allocate(3);
+            let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(3);
 
             // Store some values.
-            buffer_ptr.store(0, 1);
-            buffer_ptr.store(1, 2);
+            mem_space.store(0, 1);
+            mem_space.store(1, 2);
 
             // Mutate the value.
-            *buffer_ptr.access_mut(0) = 10;
+            *mem_space.access_mut(0) = 10;
 
             // Value should be updated.
-            assert_eq!(*buffer_ptr.access(0), 10);
+            assert_eq!(*mem_space.access(0), 10);
 
-            buffer_ptr.deallocate(3);
+            mem_space.deallocate(3);
         }
     }
 
     #[test]
-    fn test_buffer_ptr_access_first() {
+    fn test_mem_space_access_first() {
         unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new_allocate(3);
-            buffer_ptr.store(0, 1);
-            buffer_ptr.store(1, 2);
+            let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(3);
+            mem_space.store(0, 1);
+            mem_space.store(1, 2);
 
-            assert_eq!(buffer_ptr.access_first(), &1);
+            assert_eq!(mem_space.access_first(), &1);
 
-            buffer_ptr.deallocate(3);
+            mem_space.deallocate(3);
         }
     }
 
     #[test]
-    fn test_buffer_ptr_take() {
+    fn test_mem_space_take() {
         unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new_allocate(3);
+            let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(3);
 
             // Store some values.
-            buffer_ptr.store(0, 1);
-            buffer_ptr.store(1, 2);
+            mem_space.store(0, 1);
+            mem_space.store(1, 2);
 
             // Take the first value without shifting the elements.
-            assert_eq!(buffer_ptr.read_for_ownership(0), 1);
+            assert_eq!(mem_space.read_for_ownership(0), 1);
 
             // The next value should remain at the offset 1.
-            assert_eq!(*buffer_ptr.access(1), 2);
+            assert_eq!(*mem_space.access(1), 2);
 
-            buffer_ptr.deallocate(3);
+            mem_space.deallocate(3);
         }
     }
 
     #[test]
-    fn test_buffer_ptr_take_shift() {
+    fn test_mem_space_take_shift() {
         unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new_allocate(3);
+            let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(3);
 
             // Store some values.
-            buffer_ptr.store(0, 1);
-            buffer_ptr.store(1, 2);
+            mem_space.store(0, 1);
+            mem_space.store(1, 2);
 
             // Take the value and shift the elements after the offset to fill the gap.
-            assert_eq!(buffer_ptr.read_for_ownership_sl(0, 2), 1);
+            assert_eq!(mem_space.read_for_ownership_sl(0, 2), 1);
 
             // Value should be removed and the next value should be at the offset 0.
-            assert_eq!(*buffer_ptr.access(0), 2);
+            assert_eq!(*mem_space.access(0), 2);
 
-            buffer_ptr.deallocate(3);
+            mem_space.deallocate(3);
         }
     }
 
     #[test]
     #[cfg(debug_assertions)]
     #[should_panic(expected = "Pointer must not be null")]
-    fn test_buffer_ptr_as_slice_null_ptr() {
-        let buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new();
-        let slice = unsafe { buffer_ptr.as_slice(0) };
+    fn test_mem_space_as_slice_null_ptr() {
+        let mem_space: MemorySpace<u8> = MemorySpace::new();
+        let slice = unsafe { mem_space.as_slice(0) };
         assert_eq!(slice, &[]);
     }
 
     #[test]
-    fn test_buffer_ptr_as_slice_empty() {
+    fn test_mem_space_as_slice_empty() {
         unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new_allocate(3);
-            let slice = buffer_ptr.as_slice(0);
+            let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(3);
+            let slice = mem_space.as_slice(0);
             assert_eq!(slice, &[]);
 
             // Deallocate memory space or the destructor will panic.
-            buffer_ptr.deallocate(3);
+            mem_space.deallocate(3);
         }
     }
 
     #[test]
-    fn test_buffer_ptr_as_slice() {
+    fn test_mem_space_as_slice() {
         unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new_allocate(3);
+            let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(3);
 
             // Store some values.
             for i in 0..3 {
-                buffer_ptr.store(i, i as u8 + 1);
+                mem_space.store(i, i as u8 + 1);
             }
 
             // Values should be accessible as a slice.
-            let slice = buffer_ptr.as_slice(3);
+            let slice = mem_space.as_slice(3);
             assert_eq!(slice, &[1, 2, 3]);
 
-            buffer_ptr.deallocate(3);
+            mem_space.deallocate(3);
         }
     }
 
     #[test]
     #[cfg(debug_assertions)]
     #[should_panic(expected = "Pointer must not be null")]
-    fn test_buffer_ptr_as_slice_mut_null_ptr() {
-        let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new();
-        let slice = unsafe { buffer_ptr.as_slice_mut(0) };
+    fn test_mem_space_as_slice_mut_null_ptr() {
+        let mut mem_space: MemorySpace<u8> = MemorySpace::new();
+        let slice = unsafe { mem_space.as_slice_mut(0) };
         assert_eq!(slice, &mut []);
     }
 
     #[test]
-    fn test_buffer_ptr_as_slice_mut_empty() {
+    fn test_mem_space_as_slice_mut_empty() {
         unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new_allocate(3);
-            let slice = buffer_ptr.as_slice_mut(0);
+            let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(3);
+            let slice = mem_space.as_slice_mut(0);
             assert_eq!(slice, &[]);
 
             // Deallocate memory space or the destructor will panic.
-            buffer_ptr.deallocate(3);
+            mem_space.deallocate(3);
         }
     }
 
     #[test]
-    fn test_buffer_ptr_as_slice_mut() {
+    fn test_mem_space_as_slice_mut() {
         unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new_allocate(3);
+            let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(3);
             // Store some values.
             for i in 0..3 {
-                buffer_ptr.store(i, i as u8 + 1);
+                mem_space.store(i, i as u8 + 1);
             }
 
             // Values should be accessible as a mutable slice.
-            let slice = buffer_ptr.as_slice_mut(3);
+            let slice = mem_space.as_slice_mut(3);
             assert_eq!(slice, &mut [1, 2, 3]);
 
-            buffer_ptr.deallocate(3);
+            mem_space.deallocate(3);
         }
     }
 
@@ -1262,16 +1260,15 @@ mod ptr_tests {
     }
 
     #[test]
-    fn test_buffer_ptr_drop_init() {
+    fn test_mem_space_drop_init() {
         let drop_count = Rc::new(RefCell::new(0));
 
         unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<DropCounter> =
-                UnsafeBufferPointer::new_allocate(3);
+            let mut mem_space: MemorySpace<DropCounter> = MemorySpace::new_allocate(3);
 
             // Reference 5 elements to the same drop counter.
             for i in 0..3 {
-                buffer_ptr.store(
+                mem_space.store(
                     i,
                     DropCounter {
                         count: Rc::clone(&drop_count),
@@ -1280,16 +1277,16 @@ mod ptr_tests {
             }
 
             // Dropping with count 0 is a no-op.
-            buffer_ptr.drop_initialized(0);
+            mem_space.drop_initialized(0);
             assert_eq!(*drop_count.borrow(), 0);
 
             // Drop all elements.
-            buffer_ptr.drop_initialized(3);
+            mem_space.drop_initialized(3);
 
             // Since the `drop` has been called on all elements, the drop count must be 3.
             assert_eq!(*drop_count.borrow(), 3);
 
-            buffer_ptr.deallocate(3);
+            mem_space.deallocate(3);
         }
     }
 
@@ -1297,26 +1294,25 @@ mod ptr_tests {
     #[cfg(debug_assertions)]
     #[should_panic(expected = "Drop range must not be empty")]
     #[cfg_attr(miri, ignore)]
-    fn test_buffer_ptr_drop_range_invalid() {
+    fn test_mem_space_drop_range_invalid() {
         unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new_allocate(5);
-            buffer_ptr.drop_range(0..0);
+            let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(5);
+            mem_space.drop_range(0..0);
         }
     }
 
     #[test]
     #[cfg_attr(miri, ignore)]
-    fn test_buffer_ptr_drop_range() {
+    fn test_mem_space_drop_range() {
         // Drop counter with 0 count initially.
         let drop_count = Rc::new(RefCell::new(0));
 
         unsafe {
-            let mut buffer_ptr: UnsafeBufferPointer<DropCounter> =
-                UnsafeBufferPointer::new_allocate(5);
+            let mut mem_space: MemorySpace<DropCounter> = MemorySpace::new_allocate(5);
 
             // Reference 5 elements to the same drop counter.
             for i in 0..5 {
-                buffer_ptr.store(
+                mem_space.store(
                     i,
                     DropCounter {
                         count: Rc::clone(&drop_count),
@@ -1325,29 +1321,29 @@ mod ptr_tests {
             }
 
             // Drop 3 elements in the range [0, 3 - 1].
-            buffer_ptr.drop_range(0..3);
+            mem_space.drop_range(0..3);
 
             // Since the `drop` has been called on 3 elements, the drop count must be 3.
             assert_eq!(*drop_count.borrow(), 3);
 
-            buffer_ptr.deallocate(5);
+            mem_space.deallocate(5);
         }
     }
 
     #[test]
     #[cfg(debug_assertions)]
     #[should_panic(expected = "Pointer must not be null")]
-    fn test_buffer_ptr_clone_empty() {
-        let original: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new();
+    fn test_mem_space_clone_empty() {
+        let original: MemorySpace<u8> = MemorySpace::new();
 
         // Cloning an empty pointer should panic.
         let _ = unsafe { original.make_clone(0) };
     }
 
     #[test]
-    fn test_buffer_ptr_make_copy() {
+    fn test_mem_space_make_copy() {
         unsafe {
-            let mut original: UnsafeBufferPointer<u8> = UnsafeBufferPointer::new_allocate(3);
+            let mut original: MemorySpace<u8> = MemorySpace::new_allocate(3);
 
             for i in 0..3 {
                 original.store(i, i as u8 + 1);
@@ -1375,9 +1371,9 @@ mod ptr_tests {
     }
 
     #[test]
-    fn test_buffer_ptr_make_clone() {
+    fn test_mem_space_make_clone() {
         unsafe {
-            let mut original: UnsafeBufferPointer<String> = UnsafeBufferPointer::new_allocate(3);
+            let mut original: MemorySpace<String> = MemorySpace::new_allocate(3);
 
             for i in 0..3 {
                 original.store(i, (i + 1).to_string());
@@ -1410,19 +1406,16 @@ mod ptr_tests {
     #[test]
     fn test_cmp_eq() {
         unsafe {
-            let mut buffer_ptr1: UnsafeBufferPointer<u8> =
-                UnsafeBufferPointer::from_slice(&[1, 2, 3]);
-            let mut buffer_ptr2: UnsafeBufferPointer<u8> =
-                UnsafeBufferPointer::from_slice(&[1, 2, 3]);
-            let mut buffer_ptr3: UnsafeBufferPointer<u8> =
-                UnsafeBufferPointer::from_slice(&[3, 2, 1]);
+            let mut mem_space1: MemorySpace<u8> = MemorySpace::from_slice(&[1, 2, 3]);
+            let mut mem_space2: MemorySpace<u8> = MemorySpace::from_slice(&[1, 2, 3]);
+            let mut mem_space3: MemorySpace<u8> = MemorySpace::from_slice(&[3, 2, 1]);
 
-            assert!(buffer_ptr1.cmp_eq(&buffer_ptr2, 3));
-            assert!(!buffer_ptr1.cmp_eq(&buffer_ptr3, 3));
+            assert!(mem_space1.cmp_eq(&mem_space2, 3));
+            assert!(!mem_space1.cmp_eq(&mem_space3, 3));
 
-            buffer_ptr1.deallocate(3);
-            buffer_ptr2.deallocate(3);
-            buffer_ptr3.deallocate(3);
+            mem_space1.deallocate(3);
+            mem_space2.deallocate(3);
+            mem_space3.deallocate(3);
         }
     }
 
@@ -1430,11 +1423,11 @@ mod ptr_tests {
     fn test_from_slice() {
         let values = [1, 2, 3];
         unsafe {
-            let mut buffer_ptr = UnsafeBufferPointer::from_slice(&values);
+            let mut mem_space = MemorySpace::from_slice(&values);
             for (i, &value) in values.iter().enumerate() {
-                assert_eq!(*buffer_ptr.access(i), value);
+                assert_eq!(*mem_space.access(i), value);
             }
-            buffer_ptr.deallocate(values.len());
+            mem_space.deallocate(values.len());
         }
     }
 
@@ -1444,7 +1437,7 @@ mod ptr_tests {
     fn test_from_slice_zero_len() {
         let values: [u8; 0] = [];
         unsafe {
-            let _ = UnsafeBufferPointer::from_slice(&values);
+            let _ = MemorySpace::from_slice(&values);
         }
     }
 
@@ -1452,11 +1445,11 @@ mod ptr_tests {
     fn test_from_vec() {
         let values = vec![1, 2, 3];
         unsafe {
-            let mut buffer_ptr = UnsafeBufferPointer::from_vec(values.clone());
+            let mut mem_space = MemorySpace::from_vec(values.clone());
             for (i, &value) in values.iter().enumerate() {
-                assert_eq!(*buffer_ptr.access(i), value);
+                assert_eq!(*mem_space.access(i), value);
             }
-            buffer_ptr.deallocate(values.len());
+            mem_space.deallocate(values.len());
         }
     }
 
@@ -1465,7 +1458,7 @@ mod ptr_tests {
     #[should_panic(expected = "Allocation size must be greater than 0")]
     fn test_from_vec_not_allocated() {
         unsafe {
-            let _ = UnsafeBufferPointer::from_vec(vec![()]);
+            let _ = MemorySpace::from_vec(vec![()]);
         }
     }
 }

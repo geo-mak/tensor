@@ -1,7 +1,7 @@
 use core::fmt;
 use core::fmt::{Debug, Display, Formatter};
 
-use crate::core::alloc::UnsafeBufferPointer;
+use crate::core::alloc::MemorySpace;
 use crate::metadata::TensorMetaData;
 
 /// `Tensor` is a generic data structure that logically arranges its data as multidimensional
@@ -25,7 +25,7 @@ use crate::metadata::TensorMetaData;
 /// instance's lifetime.
 pub struct Tensor<T, const R: usize> {
     pub(crate) metadata: TensorMetaData<R>,
-    pub(crate) data: UnsafeBufferPointer<T>,
+    pub(crate) data: MemorySpace<T>,
 }
 
 impl<T, const R: usize> Drop for Tensor<T, R> {
