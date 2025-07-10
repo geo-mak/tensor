@@ -58,21 +58,6 @@ const fn debug_assert_not_allocated<T>(instance: &MemorySpace<T>) {
     assert!(instance.ptr.is_null(), "Pointer must be null");
 }
 
-/// Debug-mode check for the count.
-/// This function is only available in debug builds.
-///
-/// Conditions:
-///
-/// - `copy_count` must be less than or equal to `allocated_count`.
-///
-#[cfg(debug_assertions)]
-const fn debug_assert_copy_inbounds(allocated_count: usize, copy_count: usize) {
-    assert!(
-        copy_count <= allocated_count,
-        "Copy count must be less than or equal to allocated count"
-    );
-}
-
 /// `MemorySpace` represents an indirect reference to _one or more_ values of type `T`
 /// consecutively in memory.
 ///
@@ -231,14 +216,6 @@ impl<T> MemorySpace<T> {
         }
     }
 
-    /// Checks if the pointer of `MemorySpace` is null.
-    #[allow(dead_code)]
-    #[must_use]
-    #[inline(always)]
-    pub(crate) const fn is_null(&self) -> bool {
-        self.ptr.is_null()
-    }
-
     /// Returns the base pointer of the buffer as raw pointer.
     #[must_use]
     #[inline(always)]
@@ -343,70 +320,6 @@ impl<T> MemorySpace<T> {
         alloc::dealloc(self.ptr as *mut u8, current_layout);
 
         self.ptr = ptr::null();
-    }
-
-    /// Shrinks or grows the allocated memory space to the specified `count`, and copies
-    /// `copy_count` values to the new memory space.
-    ///
-    /// Copying is `untyped` which means that the values are copied as a sequence of bytes
-    /// regardless of their initialization state.
-    ///
-    /// # Safety
-    ///
-    /// - Pointer must be allocated before calling this method.
-    ///   Calling this method with a null pointer will cause termination with `SIGABRT`.
-    ///
-    /// - `allocated_count` must be the same as the previously allocated `count` of type `T`.
-    ///   If the count is not the same, the result is `undefined behavior`.
-    ///
-    /// - Initialized values will not be dropped when shrinking the memory space.
-    ///   This might cause memory leaks if `T` is not of trivial type, or if the values are not
-    ///   dropped properly before calling this method.
-    ///
-    /// - `new_count` must be greater than `0`.
-    ///   Allocating memory space with `0` count will be `undefined behavior`.
-    ///
-    /// - `new_count` in bytes, when rounded up to the nearest multiple of `align`, must be less
-    ///   than or equal to `isize::MAX` bytes.
-    ///
-    /// - `copy_count` must be within the bounds of the allocated memory space.
-    ///   Copying more elements than the allocated count will cause termination with `SIGSEGV`.
-    ///
-    /// These invariants are checked in debug mode only.
-    #[allow(dead_code)]
-    pub(crate) unsafe fn reallocate(
-        &mut self,
-        allocated_count: usize,
-        new_count: usize,
-        copy_count: usize,
-    ) {
-        #[cfg(debug_assertions)]
-        debug_assert_allocated(self);
-
-        #[cfg(debug_assertions)]
-        debug_assert_copy_inbounds(allocated_count, copy_count);
-
-        // Debug-mode checked for valid size and alignment.
-        let new_layout = self.make_layout(new_count);
-
-        let new_ptr = alloc(new_layout) as *mut T;
-
-        // Success branch.
-        if branch_prediction::likely(!new_ptr.is_null()) {
-            ptr::copy_nonoverlapping(self.ptr, new_ptr, copy_count);
-
-            let current_layout = self.make_layout(allocated_count);
-
-            alloc::dealloc(self.ptr as *mut u8, current_layout);
-
-            self.ptr = new_ptr;
-
-            return;
-        };
-
-        // Allocation failed.
-        // This call is just a fancy way to abort the program.
-        alloc::handle_alloc_error(new_layout);
     }
 
     /// Sets all elements in the allocated memory space to the default value of `T`.
@@ -550,27 +463,6 @@ impl<T> MemorySpace<T> {
         &mut *(self.ptr as *mut T).add(at)
     }
 
-    /// Returns a reference to the first initialized element.
-    ///
-    /// # Safety
-    ///
-    /// This method checks for out of bounds access in debug mode only.
-    ///
-    /// The caller must ensure that the `MemorySpace` is not empty.
-    ///
-    /// # Time Complexity
-    ///
-    /// _O_(1).
-    #[allow(dead_code)]
-    #[must_use]
-    #[inline(always)]
-    pub(crate) const unsafe fn access_first(&self) -> &T {
-        #[cfg(debug_assertions)]
-        debug_assert_allocated(self);
-
-        &*self.ptr
-    }
-
     /// Reads and returns the value at the specified offset `at`.
     ///
     /// This method creates a bitwise copy of `T` with `move` semantics.
@@ -596,45 +488,6 @@ impl<T> MemorySpace<T> {
         debug_assert_allocated(self);
 
         ptr::read((self.ptr as *mut T).add(at))
-    }
-
-    /// Reads and returns the value at the specified offset `at`, and shifts the `count` values
-    /// after `at` to fill the gap.
-    ///
-    /// This method creates a bitwise copy of `T` with `move` semantics.
-    ///
-    /// # Safety
-    ///
-    /// - Pointer must be allocated before calling this method.
-    ///   Calling this method with a null ptr will cause termination with `SIGABRT`.
-    ///
-    /// - `at + count` must be within the bounds of the initialized elements.
-    ///   Loading an uninitialized elements as `T` is `undefined behavior`.
-    ///
-    /// - If `T` is not a trivial type, the value at this offset can be in an invalid state after
-    ///   calling this method, because it might have been dropped by the caller.
-    ///
-    /// # Time Complexity
-    ///
-    /// _O_(n) where `n` is the number (`count`) of the elements to be shifted.
-    #[allow(dead_code)]
-    pub(crate) const unsafe fn read_for_ownership_sl(&mut self, at: usize, count: usize) -> T {
-        #[cfg(debug_assertions)]
-        debug_assert_allocated(self);
-
-        let value;
-        {
-            let src = (self.ptr as *mut T).add(at);
-            let dst = src.add(1);
-
-            value = ptr::read(src);
-
-            // Shift everything down to fill in.
-            ptr::copy(dst, src, count);
-        }
-
-        // The stack is now responsible for dropping the value.
-        value
     }
 
     /// Calls `drop` on the initialized elements with the specified `count` starting from the
@@ -899,7 +752,7 @@ mod ptr_tests {
     #[test]
     fn test_mem_space_new() {
         let mem_space: MemorySpace<u8> = MemorySpace::new();
-        assert!(mem_space.is_null());
+        assert!(mem_space.ptr.is_null());
     }
 
     #[test]
@@ -908,7 +761,7 @@ mod ptr_tests {
             let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(3);
 
             // Memory space should have been allocated.
-            assert!(!mem_space.is_null());
+            assert!(!mem_space.ptr.is_null());
 
             mem_space.deallocate(3);
         }
@@ -936,7 +789,7 @@ mod ptr_tests {
         unsafe {
             mem_space.allocate(3);
 
-            assert!(!mem_space.is_null());
+            assert!(!mem_space.ptr.is_null());
 
             mem_space.deallocate(3);
         }
@@ -976,36 +829,39 @@ mod ptr_tests {
             // Not yet allocated, should not panic.
             mem_space.allocate(1);
 
-            assert!(!mem_space.is_null());
+            assert!(!mem_space.ptr.is_null());
 
             // Already allocated, should panic.
             mem_space.allocate(2);
         }
     }
 
-    #[allow(dead_code)]
-    enum Choice {
-        Custom,
-        Default,
+    #[derive(PartialEq, Debug)]
+    struct TestDefault {
+        data: String,
     }
 
-    impl Default for Choice {
+    impl Default for TestDefault {
         fn default() -> Self {
-            Choice::Default
+            Self {
+                data: String::from("default"),
+            }
         }
     }
 
     #[test]
     fn test_mem_space_memset_default() {
         unsafe {
-            let mut mem_space: MemorySpace<Choice> = MemorySpace::new_allocate(3);
+            let mut mem_space: MemorySpace<TestDefault> = MemorySpace::new_allocate(3);
+
+            let t_default = TestDefault::default();
 
             // Set all elements to the default value of `Choice`.
             mem_space.memset_default(3);
 
             // Values were uninit, so they should be set to `Default`.
             for i in 0..3 {
-                assert!(matches!(*mem_space.ptr.add(i), Choice::Default))
+                assert_eq!(*mem_space.ptr.add(i), t_default)
             }
 
             mem_space.deallocate(3);
@@ -1015,14 +871,16 @@ mod ptr_tests {
     #[test]
     fn test_mem_space_new_allocate_default() {
         unsafe {
-            let mut mem_space: MemorySpace<Choice> = MemorySpace::new_allocate_default(3);
+            let mut mem_space: MemorySpace<TestDefault> = MemorySpace::new_allocate_default(3);
+
+            let t_default = TestDefault::default();
 
             // Memory space should have been allocated.
-            assert!(!mem_space.is_null());
+            assert!(!mem_space.ptr.is_null());
 
             // All elements are must have been initialized to their default values.
             for i in 0..3 {
-                assert!(matches!(*mem_space.ptr.add(i), Choice::Default))
+                assert_eq!(*mem_space.ptr.add(i), t_default)
             }
 
             mem_space.deallocate(3);
@@ -1044,39 +902,6 @@ mod ptr_tests {
     fn test_mem_space_new_allocate_default_overflow() {
         let _: MemorySpace<u8> =
             unsafe { MemorySpace::new_allocate_default(isize::MAX as usize + 1) };
-    }
-
-    #[test]
-    fn test_mem_space_reallocate() {
-        unsafe {
-            let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(3);
-
-            *(mem_space.ptr as *mut u8) = 1;
-            *(mem_space.ptr as *mut u8).add(1) = 2;
-            *(mem_space.ptr as *mut u8).add(2) = 3;
-
-            // Grows the count to 5.
-            mem_space.reallocate(3, 5, 3);
-
-            // Check values after reallocation.
-            for i in 0..3 {
-                assert_eq!(*mem_space.ptr.add(i), i as u8 + 1);
-            }
-
-            mem_space.deallocate(5);
-        }
-    }
-
-    #[test]
-    #[cfg(debug_assertions)]
-    #[should_panic(expected = "Pointer must not be null")]
-    fn test_mem_space_reallocate_null_ptr() {
-        let mut mem_space: MemorySpace<u8> = MemorySpace::new();
-
-        // Not yet allocated, should panic.
-        unsafe {
-            mem_space.reallocate(5, 10, 5);
-        }
     }
 
     #[test]
@@ -1117,19 +942,6 @@ mod ptr_tests {
     }
 
     #[test]
-    fn test_mem_space_access_first() {
-        unsafe {
-            let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(3);
-            mem_space.store(0, 1);
-            mem_space.store(1, 2);
-
-            assert_eq!(mem_space.access_first(), &1);
-
-            mem_space.deallocate(3);
-        }
-    }
-
-    #[test]
     fn test_mem_space_take() {
         unsafe {
             let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(3);
@@ -1143,25 +955,6 @@ mod ptr_tests {
 
             // The next value should remain at the offset 1.
             assert_eq!(*mem_space.access(1), 2);
-
-            mem_space.deallocate(3);
-        }
-    }
-
-    #[test]
-    fn test_mem_space_take_shift() {
-        unsafe {
-            let mut mem_space: MemorySpace<u8> = MemorySpace::new_allocate(3);
-
-            // Store some values.
-            mem_space.store(0, 1);
-            mem_space.store(1, 2);
-
-            // Take the value and shift the elements after the offset to fill the gap.
-            assert_eq!(mem_space.read_for_ownership_sl(0, 2), 1);
-
-            // Value should be removed and the next value should be at the offset 0.
-            assert_eq!(*mem_space.access(0), 2);
 
             mem_space.deallocate(3);
         }
