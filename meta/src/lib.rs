@@ -23,5 +23,5 @@ mod parsing;
 /// ```
 #[proc_macro]
 pub fn tensor(input: TokenStream) -> TokenStream {
-    parsing::TensorParser::parse(input)
+    parsing::tensor_parser::parse(input)
 }

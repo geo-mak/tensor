@@ -863,7 +863,7 @@ mod ptr_tests {
             for i in 0..3 {
                 assert_eq!(*mem_space.ptr.add(i), t_default)
             }
-            
+
             mem_space.drop_initialized(3);
             mem_space.deallocate(3);
         }

@@ -10,16 +10,17 @@ use proc_macro::token_stream::IntoIter;
 /// Number      <- '-'? Digit+ ('.' Digit+)?
 /// Digit       <- [0-9]
 /// ```
-pub(crate) struct TensorParser;
 
-impl TensorParser {
+pub(crate) mod tensor_parser {
+    use super::*;
+
     pub(crate) fn parse(input: TokenStream) -> TokenStream {
         let mut stream = input.into_iter();
-        let group = Self::match_input(&mut stream);
+        let group = self::match_input(&mut stream);
         let mut values = Values(Vec::new());
         let mut dimensions = Dimensions(Vec::new());
-        Self::parse_group(0, &group, &mut values, &mut dimensions);
-        Self::generate(values, dimensions)
+        self::parse_group(0, &group, &mut values, &mut dimensions);
+        self::generate(values, dimensions)
     }
 
     fn match_input(stream: &mut IntoIter) -> Group {
@@ -58,7 +59,7 @@ impl TensorParser {
                     if g.delimiter() != Delimiter::Bracket {
                         diagnostics::invalid_delimiter(&span)
                     }
-                    Self::parse_group(level + 1, g, values, dimensions);
+                    self::parse_group(level + 1, g, values, dimensions);
                     state.add(2)
                 }
                 TokenTree::Literal(lit) => {
@@ -77,13 +78,13 @@ impl TensorParser {
                 }
                 _ => diagnostics::unexpected_token(&member)
             }
-            Self::match_sep(&span, &mut stream);
+            self::match_sep(&span, &mut stream);
         };
 
         match state.kind {
             0 => diagnostics::empty_array(level + 1, &group.span()),
             3 => diagnostics::expected_scalars(&group.span()),
-            _ => Self::update_dimensions(level, &group.span(), state, dimensions)
+            _ => self::update_dimensions(level, &group.span(), state, dimensions)
         }
     }
 
@@ -131,7 +132,6 @@ impl TensorParser {
         TokenStream::from_iter(tokens)
     }
 }
-
 struct GroupState {
     len: usize,
     kind: u8,
