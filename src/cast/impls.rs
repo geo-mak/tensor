@@ -1,4 +1,4 @@
-use crate::core::alloc::MemorySpace;
+use crate::core::alloc::AllocationPointer;
 use crate::{CastError, Tensor, TryCast};
 
 impl<T, const R: usize> Tensor<T, R> {
@@ -13,11 +13,11 @@ impl<T, const R: usize> Tensor<T, R> {
         let data = &self.data;
 
         unsafe {
-            let mut result = MemorySpace::new_allocate(len);
+            let mut result = AllocationPointer::new_allocate(len);
 
             let mut i = 0;
             while i < len {
-                match data.access(i).try_cast() {
+                match data.reference(i).try_cast() {
                     Ok(u_i) => {
                         result.store(i, u_i);
                     }

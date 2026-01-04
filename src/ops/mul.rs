@@ -1,7 +1,7 @@
 use core::ops::Mul;
 
 use crate::assertions::assert_same_shape;
-use crate::core::alloc::MemorySpace;
+use crate::core::alloc::AllocationPointer;
 use crate::Tensor;
 
 /// Multiplies `n` values of `a` with `b` and writes result to `r`.
@@ -48,13 +48,13 @@ where
         assert_same_shape(self, other);
 
         let len = self.metadata.size();
-        let a = self.data.ptr();
-        let b = other.data.ptr();
+        let a = self.data.base();
+        let b = other.data.base();
 
         unsafe {
-            let result = MemorySpace::new_allocate(len);
+            let result = AllocationPointer::new_allocate(len);
 
-            mul(len, a, b, result.ptr_mut());
+            mul(len, a, b, result.base_mut());
 
             Tensor {
                 metadata: self.metadata,
@@ -91,8 +91,8 @@ where
         assert_same_shape(self, other);
 
         let len = self.metadata.size();
-        let a = self.data.ptr_mut();
-        let b = other.data.ptr();
+        let a = self.data.base_mut();
+        let b = other.data.base();
 
         unsafe {
             mul(len, a, b, a);
@@ -138,12 +138,12 @@ where
     fn mul(self, value: T) -> Tensor<T, R> {
         // len is assumed to be > 0.
         let len = self.metadata.size();
-        let a = self.data.ptr();
+        let a = self.data.base();
 
         unsafe {
-            let result = MemorySpace::new_allocate(len);
+            let result = AllocationPointer::new_allocate(len);
 
-            mul_value(len, a, value, result.ptr_mut());
+            mul_value(len, a, value, result.base_mut());
 
             Tensor {
                 metadata: self.metadata,
@@ -176,7 +176,7 @@ where
     fn mul(self, value: T) -> Self::Output {
         // len is assumed to be > 0.
         let len = self.metadata.size();
-        let a = self.data.ptr_mut();
+        let a = self.data.base_mut();
 
         unsafe {
             mul_value(len, a, value, a);

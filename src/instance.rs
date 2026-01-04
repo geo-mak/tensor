@@ -1,5 +1,5 @@
 use crate::assertions::assert_not_zst;
-use crate::core::alloc::MemorySpace;
+use crate::core::alloc::AllocationPointer;
 use crate::metadata::TensorMetaData;
 use crate::Tensor;
 
@@ -37,7 +37,7 @@ impl<T, const R: usize> Tensor<T, R> {
         let metadata = TensorMetaData::new(dimensions);
         Self {
             metadata,
-            data: unsafe { MemorySpace::new_allocate_memset(metadata.size(), value) },
+            data: unsafe { AllocationPointer::new_allocate_memset(metadata.size(), value) },
         }
     }
 
@@ -73,7 +73,7 @@ impl<T, const R: usize> Tensor<T, R> {
         let metadata = TensorMetaData::new(dimensions);
         Self {
             metadata,
-            data: unsafe { MemorySpace::new_allocate_default(metadata.size()) },
+            data: unsafe { AllocationPointer::new_allocate_default(metadata.size()) },
         }
     }
 
@@ -110,7 +110,7 @@ impl<T, const R: usize> Tensor<T, R> {
 
         Self {
             metadata: TensorMetaData::new_cmp_eq(values.len(), dimensions),
-            data: unsafe { MemorySpace::from_slice(values) },
+            data: unsafe { AllocationPointer::from_slice(values) },
         }
     }
 
@@ -144,7 +144,7 @@ impl<T, const R: usize> Tensor<T, R> {
 
         Self {
             metadata: TensorMetaData::new_cmp_eq(values.len(), dimensions),
-            data: unsafe { MemorySpace::from_vec(values) },
+            data: unsafe { AllocationPointer::from_vec(values) },
         }
     }
 }

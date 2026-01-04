@@ -1,7 +1,7 @@
 use core::ops::Div;
 
 use crate::assertions::assert_same_shape;
-use crate::core::alloc::MemorySpace;
+use crate::core::alloc::AllocationPointer;
 use crate::Tensor;
 
 /// Divides `n` values of `a` by `b` and writes result to `r`.
@@ -49,13 +49,13 @@ where
         assert_same_shape(self, other);
 
         let len = self.metadata.size();
-        let a = self.data.ptr();
-        let b = other.data.ptr();
+        let a = self.data.base();
+        let b = other.data.base();
 
         unsafe {
-            let result = MemorySpace::new_allocate(len);
+            let result = AllocationPointer::new_allocate(len);
 
-            div(len, a, b, result.ptr_mut());
+            div(len, a, b, result.base_mut());
 
             Tensor {
                 metadata: self.metadata,
@@ -94,8 +94,8 @@ where
         assert_same_shape(self, other);
 
         let len = self.metadata.size();
-        let a = self.data.ptr_mut();
-        let b = other.data.ptr();
+        let a = self.data.base_mut();
+        let b = other.data.base();
 
         unsafe {
             div(len, a, b, a);
@@ -141,12 +141,12 @@ where
     fn div(self, value: T) -> Tensor<T, R> {
         // len is assumed to be > 0.
         let len = self.metadata.size();
-        let a = self.data.ptr();
+        let a = self.data.base();
 
         unsafe {
-            let result = MemorySpace::new_allocate(len);
+            let result = AllocationPointer::new_allocate(len);
 
-            div_value(len, a, value, result.ptr_mut());
+            div_value(len, a, value, result.base_mut());
 
             Tensor {
                 metadata: self.metadata,
@@ -178,7 +178,7 @@ where
     /// ```
     fn div(self, value: T) {
         let len = self.metadata.size();
-        let a = self.data.ptr_mut();
+        let a = self.data.base_mut();
 
         unsafe {
             div_value(len, a, value, a);
