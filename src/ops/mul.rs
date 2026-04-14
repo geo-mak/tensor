@@ -1,8 +1,8 @@
 use core::ops::Mul;
 
+use crate::Tensor;
 use crate::assertions::assert_same_shape;
 use crate::core::alloc::AllocationPointer;
-use crate::Tensor;
 
 /// Multiplies `n` values of `a` with `b` and writes result to `r`.
 #[inline(always)]

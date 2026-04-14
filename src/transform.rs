@@ -1,7 +1,7 @@
 use core::mem::ManuallyDrop;
 
-use crate::metadata::TensorMetaData;
 use crate::Tensor;
+use crate::metadata::TensorMetaData;
 
 impl<T, const R: usize> Tensor<T, R> {
     /// Reshapes the tensor to new dimensions.

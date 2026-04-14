@@ -1,8 +1,8 @@
 use core::ops::Add;
 
+use crate::Tensor;
 use crate::assertions::assert_same_shape;
 use crate::core::alloc::AllocationPointer;
-use crate::Tensor;
 
 /// Adds `n` values of `a` to `b` and writes result to `r`.
 #[inline(always)]

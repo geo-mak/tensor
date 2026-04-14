@@ -1,8 +1,8 @@
 use core::ops::Div;
 
+use crate::Tensor;
 use crate::assertions::assert_same_shape;
 use crate::core::alloc::AllocationPointer;
-use crate::Tensor;
 
 /// Divides `n` values of `a` by `b` and writes result to `r`.
 #[inline(always)]

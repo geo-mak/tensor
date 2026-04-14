@@ -1,7 +1,7 @@
+use crate::Tensor;
 use crate::assertions::assert_not_zst;
 use crate::core::alloc::AllocationPointer;
 use crate::metadata::TensorMetaData;
-use crate::Tensor;
 
 impl<T, const R: usize> Tensor<T, R> {
     /// Creates a new tensor with the specified dimensions and initializes all elements to a

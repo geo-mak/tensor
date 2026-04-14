@@ -1,7 +1,7 @@
 use core::ops::Neg;
 
-use crate::core::alloc::AllocationPointer;
 use crate::Tensor;
+use crate::core::alloc::AllocationPointer;
 
 /// Negates `n` values of `a`, and writes result to `r`.
 #[inline(always)]

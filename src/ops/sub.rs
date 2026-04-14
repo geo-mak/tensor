@@ -1,8 +1,8 @@
 use core::ops::Sub;
 
+use crate::Tensor;
 use crate::assertions::assert_same_shape;
 use crate::core::alloc::AllocationPointer;
-use crate::Tensor;
 
 /// Subtracts `n` values of `b` from `a` and writes result to `r`.
 #[inline(always)]
