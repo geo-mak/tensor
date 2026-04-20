@@ -144,6 +144,7 @@ impl<T, const R: usize> Tensor<T, R> {
         T: Copy,
     {
         assert_not_zst::<T>();
+        assert!(!values.is_empty(), "Values' slice can't be empty");
 
         // First.
         let metadata = TensorMetaData::new_cmp_eq(values.len(), dimensions);
@@ -189,6 +190,7 @@ impl<T, const R: usize> Tensor<T, R> {
     /// ```
     pub fn from_vec(dimensions: [usize; R], values: Vec<T>) -> Self {
         assert_not_zst::<T>();
+        assert!(!values.is_empty(), "Values' vector can't be empty");
 
         Self {
             metadata: TensorMetaData::new_cmp_eq(values.len(), dimensions),
@@ -278,6 +280,13 @@ mod instance_tests {
 
     #[test]
     #[should_panic]
+    fn test_from_slice_zero_len() {
+        let vec = Vec::<u8>::new();
+        Tensor::from_slice([0, 0, 0], &vec);
+    }
+
+    #[test]
+    #[should_panic]
     fn test_from_slice_invalid_shape() {
         Tensor::from_slice([2, 3], &[1, 2, 3, 4, 5]);
     }
@@ -301,6 +310,13 @@ mod instance_tests {
     #[should_panic]
     fn test_from_vec_zst() {
         Tensor::from_vec([1], vec![()]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_from_vec_zero_len() {
+        let vec = Vec::<u8>::new();
+        Tensor::from_vec([0, 0, 0], vec);
     }
 
     #[test]
