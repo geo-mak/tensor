@@ -1,4 +1,8 @@
-use crate::core::alloc::AllocationPointer;
+use core::hint::unreachable_unchecked;
+
+use crate::core::mem::error::OnError;
+use crate::core::mem::pointers::UnmanagedPointer;
+
 use crate::{CastError, Tensor, TryCast};
 
 impl<T, const R: usize> Tensor<T, R> {
@@ -13,18 +17,25 @@ impl<T, const R: usize> Tensor<T, R> {
         let data = &self.data;
 
         unsafe {
-            let mut result = AllocationPointer::new_allocate(len);
+            let mut output = UnmanagedPointer::new();
+
+            let layout = output.layout_unchecked_of(len);
+
+            match output.acquire(layout, OnError::Panic) {
+                Ok(_) => (),
+                Err(_) => unreachable_unchecked(),
+            };
 
             let mut i = 0;
             while i < len {
                 match data.reference(i).try_cast() {
                     Ok(u_i) => {
-                        result.store(i, u_i);
+                        output.store(i, u_i);
                     }
                     Err(err) => {
                         // Cleanup.
-                        result.drop_initialized(i);
-                        result.deallocate(len);
+                        output.drop_initialized(i);
+                        output.release(layout);
                         return Err(err);
                     }
                 }
@@ -33,7 +44,7 @@ impl<T, const R: usize> Tensor<T, R> {
 
             let instance = Tensor {
                 metadata: self.metadata,
-                data: result,
+                data: output,
             };
 
             Ok(instance)

@@ -1,7 +1,10 @@
+use core::hint::unreachable_unchecked;
 use core::ops::Neg;
 
+use crate::core::mem::error::OnError;
+use crate::core::mem::pointers::UnmanagedPointer;
+
 use crate::Tensor;
-use crate::core::alloc::AllocationPointer;
 
 /// Negates `n` values of `a`, and writes result to `r`.
 #[inline(always)]
@@ -41,15 +44,22 @@ where
     fn neg(self) -> Self::Output {
         // len is assumed to be > 0.
         let len = self.metadata.size();
-        let a = self.data.base();
+        let a = self.data.as_ptr();
         unsafe {
-            let result = AllocationPointer::new_allocate(len);
+            let mut output = UnmanagedPointer::new();
 
-            neg(len, a, result.base_mut());
+            let layout = output.layout_unchecked_of(len);
+
+            match output.acquire(layout, OnError::Panic) {
+                Ok(_) => (),
+                Err(_) => unreachable_unchecked(),
+            };
+
+            neg(len, a, output.as_ptr_mut());
 
             Tensor {
                 metadata: self.metadata,
-                data: result,
+                data: output,
             }
         }
     }
@@ -77,7 +87,7 @@ where
     /// ```
     fn neg(self) {
         let len = self.metadata.size();
-        let a = self.data.base_mut();
+        let a = self.data.as_ptr_mut();
         unsafe { neg(len, a, a) }
     }
 }

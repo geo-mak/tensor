@@ -1,7 +1,10 @@
 use core::fmt;
 use core::fmt::{Debug, Display, Formatter};
+use core::hint::unreachable_unchecked;
 
-use crate::core::alloc::AllocationPointer;
+use crate::core::mem::error::OnError;
+use crate::core::mem::pointers::UnmanagedPointer;
+
 use crate::metadata::TensorMetaData;
 
 /// `Tensor` is a generic data structure that logically arranges its data as multidimensional
@@ -25,7 +28,7 @@ use crate::metadata::TensorMetaData;
 /// instance's lifetime.
 pub struct Tensor<T, const R: usize> {
     pub(crate) metadata: TensorMetaData<R>,
-    pub(crate) data: AllocationPointer<T>,
+    pub(crate) data: UnmanagedPointer<T>,
 }
 
 impl<T, const R: usize> Drop for Tensor<T, R> {
@@ -34,7 +37,8 @@ impl<T, const R: usize> Drop for Tensor<T, R> {
         let len = self.metadata.size();
         unsafe {
             self.data.drop_initialized(len);
-            self.data.deallocate(len);
+            let layout = self.data.layout_unchecked_of(len);
+            self.data.release(layout);
         }
     }
 }
@@ -47,9 +51,15 @@ where
     fn clone(&self) -> Self {
         unsafe {
             let metadata = self.metadata;
+
+            let cloned = match self.data.make_clone(metadata.size(), OnError::Panic) {
+                Ok(instance) => instance,
+                Err(_) => unreachable_unchecked(),
+            };
+
             Tensor {
                 metadata,
-                data: self.data.make_clone(metadata.size()),
+                data: cloned,
             }
         }
     }
@@ -63,9 +73,15 @@ where
     pub fn copy(&self) -> Self {
         unsafe {
             let metadata = self.metadata;
+
+            let copy = match self.data.make_copy(metadata.size(), OnError::Panic) {
+                Ok(instance) => instance,
+                Err(_) => unreachable_unchecked(),
+            };
+
             Tensor {
                 metadata,
-                data: self.data.make_copy(metadata.size()),
+                data: copy,
             }
         }
     }
@@ -83,7 +99,11 @@ where
         if !self.metadata.cmp_eq(&other.metadata) {
             return false;
         }
-        unsafe { self.data.cmp_eq(&other.data, self.metadata.size()) }
+
+        unsafe {
+            self.data
+                .compare_partial_eq(&other.data, self.metadata.size())
+        }
     }
 }
 

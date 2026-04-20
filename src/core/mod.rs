@@ -1,2 +1,2 @@
-pub(crate) mod alloc;
+pub(crate) mod mem;
 pub(crate) mod opt;

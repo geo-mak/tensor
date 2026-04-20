@@ -1,6 +1,10 @@
+use core::hint::unreachable_unchecked;
+
+use crate::core::mem::error::OnError;
+use crate::core::mem::pointers::UnmanagedPointer;
+
 use crate::Tensor;
 use crate::assertions::assert_not_zst;
-use crate::core::alloc::AllocationPointer;
 use crate::metadata::TensorMetaData;
 
 impl<T, const R: usize> Tensor<T, R> {
@@ -30,14 +34,30 @@ impl<T, const R: usize> Tensor<T, R> {
     /// ```
     pub fn new_set(dimensions: [usize; R], value: T) -> Self
     where
-        T: Clone,
+        T: Copy,
     {
         assert_not_zst::<T>();
 
         let metadata = TensorMetaData::new(dimensions);
+        let count = metadata.size();
+
+        let mut pointer = UnmanagedPointer::new();
+
+        unsafe {
+            let layout = match pointer.layout_of(count, OnError::Panic) {
+                Ok(layout) => layout,
+                Err(_) => unreachable_unchecked(),
+            };
+
+            match pointer.acquire(layout, OnError::Panic) {
+                Ok(_) => pointer.memset(count, value),
+                Err(_) => unreachable_unchecked(),
+            }
+        }
+
         Self {
             metadata,
-            data: unsafe { AllocationPointer::new_allocate_memset(metadata.size(), value) },
+            data: pointer,
         }
     }
 
@@ -67,13 +87,30 @@ impl<T, const R: usize> Tensor<T, R> {
     pub fn new_default(dimensions: [usize; R]) -> Self
     where
         T: Default,
+        T: Copy,
     {
         assert_not_zst::<T>();
 
         let metadata = TensorMetaData::new(dimensions);
+        let count = metadata.size();
+
+        let mut pointer = UnmanagedPointer::new();
+
+        unsafe {
+            let layout = match pointer.layout_of(count, OnError::Panic) {
+                Ok(layout) => layout,
+                Err(_) => unreachable_unchecked(),
+            };
+
+            match pointer.acquire(layout, OnError::Panic) {
+                Ok(_) => pointer.memset_default(count),
+                Err(_) => unreachable_unchecked(),
+            }
+        }
+
         Self {
             metadata,
-            data: unsafe { AllocationPointer::new_allocate_default(metadata.size()) },
+            data: pointer,
         }
     }
 
@@ -108,9 +145,20 @@ impl<T, const R: usize> Tensor<T, R> {
     {
         assert_not_zst::<T>();
 
+        // First.
+        let metadata = TensorMetaData::new_cmp_eq(values.len(), dimensions);
+
+        // Second.
+        let instance = unsafe {
+            match UnmanagedPointer::from_slice(values, OnError::Panic) {
+                Ok(instance) => instance,
+                Err(_) => unreachable_unchecked(),
+            }
+        };
+
         Self {
-            metadata: TensorMetaData::new_cmp_eq(values.len(), dimensions),
-            data: unsafe { AllocationPointer::from_slice(values) },
+            metadata,
+            data: instance,
         }
     }
 
@@ -144,7 +192,7 @@ impl<T, const R: usize> Tensor<T, R> {
 
         Self {
             metadata: TensorMetaData::new_cmp_eq(values.len(), dimensions),
-            data: unsafe { AllocationPointer::from_vec(values) },
+            data: unsafe { UnmanagedPointer::from_vec(values) },
         }
     }
 }

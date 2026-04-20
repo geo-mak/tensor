@@ -1,8 +1,11 @@
+use core::hint::unreachable_unchecked;
 use core::ops::Div;
+
+use crate::core::mem::error::OnError;
+use crate::core::mem::pointers::UnmanagedPointer;
 
 use crate::Tensor;
 use crate::assertions::assert_same_shape;
-use crate::core::alloc::AllocationPointer;
 
 /// Divides `n` values of `a` by `b` and writes result to `r`.
 #[inline(always)]
@@ -49,17 +52,24 @@ where
         assert_same_shape(self, other);
 
         let len = self.metadata.size();
-        let a = self.data.base();
-        let b = other.data.base();
+        let a = self.data.as_ptr();
+        let b = other.data.as_ptr();
 
         unsafe {
-            let result = AllocationPointer::new_allocate(len);
+            let mut output = UnmanagedPointer::new();
 
-            div(len, a, b, result.base_mut());
+            let layout = output.layout_unchecked_of(len);
+
+            match output.acquire(layout, OnError::Panic) {
+                Ok(_) => (),
+                Err(_) => unreachable_unchecked(),
+            };
+
+            div(len, a, b, output.as_ptr_mut());
 
             Tensor {
                 metadata: self.metadata,
-                data: result,
+                data: output,
             }
         }
     }
@@ -94,8 +104,8 @@ where
         assert_same_shape(self, other);
 
         let len = self.metadata.size();
-        let a = self.data.base_mut();
-        let b = other.data.base();
+        let a = self.data.as_ptr_mut();
+        let b = other.data.as_ptr();
 
         unsafe {
             div(len, a, b, a);
@@ -141,16 +151,23 @@ where
     fn div(self, value: T) -> Tensor<T, R> {
         // len is assumed to be > 0.
         let len = self.metadata.size();
-        let a = self.data.base();
+        let a = self.data.as_ptr();
 
         unsafe {
-            let result = AllocationPointer::new_allocate(len);
+            let mut output = UnmanagedPointer::new();
 
-            div_value(len, a, value, result.base_mut());
+            let layout = output.layout_unchecked_of(len);
+
+            match output.acquire(layout, OnError::Panic) {
+                Ok(_) => (),
+                Err(_) => unreachable_unchecked(),
+            };
+
+            div_value(len, a, value, output.as_ptr_mut());
 
             Tensor {
                 metadata: self.metadata,
-                data: result,
+                data: output,
             }
         }
     }
@@ -178,7 +195,7 @@ where
     /// ```
     fn div(self, value: T) {
         let len = self.metadata.size();
-        let a = self.data.base_mut();
+        let a = self.data.as_ptr_mut();
 
         unsafe {
             div_value(len, a, value, a);

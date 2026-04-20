@@ -1,8 +1,11 @@
+use core::hint::unreachable_unchecked;
 use core::ops::Add;
+
+use crate::core::mem::error::OnError;
+use crate::core::mem::pointers::UnmanagedPointer;
 
 use crate::Tensor;
 use crate::assertions::assert_same_shape;
-use crate::core::alloc::AllocationPointer;
 
 /// Adds `n` values of `a` to `b` and writes result to `r`.
 #[inline(always)]
@@ -50,17 +53,25 @@ where
 
         // len is assumed to be > 0.
         let len = self.metadata.size();
-        let a = self.data.base();
-        let b = other.data.base();
+
+        let a = self.data.as_ptr();
+        let b = other.data.as_ptr();
 
         unsafe {
-            let result = AllocationPointer::new_allocate(len);
+            let mut output = UnmanagedPointer::new();
 
-            add(len, a, b, result.base_mut());
+            let layout = output.layout_unchecked_of(len);
+
+            match output.acquire(layout, OnError::Panic) {
+                Ok(_) => (),
+                Err(_) => unreachable_unchecked(),
+            };
+
+            add(len, a, b, output.as_ptr_mut());
 
             Tensor {
                 metadata: self.metadata,
-                data: result,
+                data: output,
             }
         }
     }
@@ -93,8 +104,8 @@ where
         assert_same_shape(self, other);
 
         let len = self.metadata.size();
-        let a = self.data.base_mut();
-        let b = other.data.base();
+        let a = self.data.as_ptr_mut();
+        let b = other.data.as_ptr();
 
         unsafe {
             add(len, a, b, a);
@@ -138,16 +149,23 @@ where
     /// assert_eq!(result.get(&[1, 2]), &3);
     fn add(self, value: T) -> Tensor<T, R> {
         let len = self.metadata.size();
-        let a = self.data.base();
+        let a = self.data.as_ptr();
 
         unsafe {
-            let result = AllocationPointer::new_allocate(len);
+            let mut output = UnmanagedPointer::new();
 
-            add_value(len, a, value, result.base_mut());
+            let layout = output.layout_unchecked_of(len);
+
+            match output.acquire(layout, OnError::Panic) {
+                Ok(_) => (),
+                Err(_) => unreachable_unchecked(),
+            };
+
+            add_value(len, a, value, output.as_ptr_mut());
 
             Tensor {
                 metadata: self.metadata,
-                data: result,
+                data: output,
             }
         }
     }
@@ -174,7 +192,7 @@ where
     /// assert_eq!(tensor.get(&[1, 2]), &3);
     fn add(self, value: T) {
         let len = self.metadata.size();
-        let a = self.data.base_mut();
+        let a = self.data.as_ptr_mut();
 
         unsafe {
             add_value(len, a, value, a);

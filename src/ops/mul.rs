@@ -1,8 +1,11 @@
+use core::hint::unreachable_unchecked;
 use core::ops::Mul;
+
+use crate::core::mem::error::OnError;
+use crate::core::mem::pointers::UnmanagedPointer;
 
 use crate::Tensor;
 use crate::assertions::assert_same_shape;
-use crate::core::alloc::AllocationPointer;
 
 /// Multiplies `n` values of `a` with `b` and writes result to `r`.
 #[inline(always)]
@@ -48,17 +51,24 @@ where
         assert_same_shape(self, other);
 
         let len = self.metadata.size();
-        let a = self.data.base();
-        let b = other.data.base();
+        let a = self.data.as_ptr();
+        let b = other.data.as_ptr();
 
         unsafe {
-            let result = AllocationPointer::new_allocate(len);
+            let mut output = UnmanagedPointer::new();
 
-            mul(len, a, b, result.base_mut());
+            let layout = output.layout_unchecked_of(len);
+
+            match output.acquire(layout, OnError::Panic) {
+                Ok(_) => (),
+                Err(_) => unreachable_unchecked(),
+            };
+
+            mul(len, a, b, output.as_ptr_mut());
 
             Tensor {
                 metadata: self.metadata,
-                data: result,
+                data: output,
             }
         }
     }
@@ -91,8 +101,8 @@ where
         assert_same_shape(self, other);
 
         let len = self.metadata.size();
-        let a = self.data.base_mut();
-        let b = other.data.base();
+        let a = self.data.as_ptr_mut();
+        let b = other.data.as_ptr();
 
         unsafe {
             mul(len, a, b, a);
@@ -138,16 +148,23 @@ where
     fn mul(self, value: T) -> Tensor<T, R> {
         // len is assumed to be > 0.
         let len = self.metadata.size();
-        let a = self.data.base();
+        let a = self.data.as_ptr();
 
         unsafe {
-            let result = AllocationPointer::new_allocate(len);
+            let mut output = UnmanagedPointer::new();
 
-            mul_value(len, a, value, result.base_mut());
+            let layout = output.layout_unchecked_of(len);
+
+            match output.acquire(layout, OnError::Panic) {
+                Ok(_) => (),
+                Err(_) => unreachable_unchecked(),
+            };
+
+            mul_value(len, a, value, output.as_ptr_mut());
 
             Tensor {
                 metadata: self.metadata,
-                data: result,
+                data: output,
             }
         }
     }
@@ -176,7 +193,7 @@ where
     fn mul(self, value: T) -> Self::Output {
         // len is assumed to be > 0.
         let len = self.metadata.size();
-        let a = self.data.base_mut();
+        let a = self.data.as_ptr_mut();
 
         unsafe {
             mul_value(len, a, value, a);

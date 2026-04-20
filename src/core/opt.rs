@@ -1,3 +1,5 @@
+use core::mem::ManuallyDrop;
+
 /// Compiler hints to prioritize branches over others and improve branch prediction.
 pub(crate) mod branch_prediction {
     #[cold]
@@ -30,5 +32,41 @@ pub(crate) mod branch_prediction {
         } else {
             false
         }
+    }
+}
+
+/// Control structure to execute an expression on drop.
+/// Execution can be disabled in the scope using method `finish()`.
+pub(crate) struct OnDrop<T, F>
+where
+    F: FnMut(&mut T),
+{
+    pub arg: T,
+    on_drop: F,
+}
+
+impl<T, F> OnDrop<T, F>
+where
+    F: FnMut(&mut T),
+{
+    #[must_use]
+    #[inline(always)]
+    pub const fn set_on(arg: T, on_drop: F) -> OnDrop<T, F> {
+        OnDrop { arg, on_drop }
+    }
+
+    #[inline(always)]
+    pub const fn set_off(self) {
+        let _ = ManuallyDrop::new(self);
+    }
+}
+
+impl<T, F> Drop for OnDrop<T, F>
+where
+    F: FnMut(&mut T),
+{
+    #[inline]
+    fn drop(&mut self) {
+        (self.on_drop)(&mut self.arg)
     }
 }
