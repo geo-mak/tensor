@@ -15,7 +15,7 @@ pub enum OnError {
 }
 
 impl OnError {
-    /// Handles a layout-error error according to the current variant.
+    /// Handles a layout-error according to the current variant.
     #[inline]
     pub const fn layout_err(&self) -> MemoryError {
         match self {
