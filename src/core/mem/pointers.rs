@@ -290,7 +290,7 @@ impl<T> UnmanagedPointer<T> {
             return Ok(());
         }
 
-        Err(on_err.server_err(layout))
+        Err(on_err.allocator_err(layout))
     }
 
     /// Releases the memory space pointed to by the pointer according to the provided `layout`.

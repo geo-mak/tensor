@@ -15,7 +15,7 @@ pub enum OnError {
 }
 
 impl OnError {
-    /// Handles `LayoutErr` error according to the current variant.
+    /// Handles a layout-error error according to the current variant.
     #[inline]
     pub const fn layout_err(&self) -> MemoryError {
         match self {
@@ -24,9 +24,9 @@ impl OnError {
         }
     }
 
-    /// Handles `ServerErr` according to the current variant.
+    /// Handles an allocator-error according to the current variant.
     #[inline]
-    pub fn server_err(&self, layout: Layout) -> MemoryError {
+    pub fn allocator_err(&self, layout: Layout) -> MemoryError {
         match self {
             OnError::Panic => handle_alloc_error(layout),
             OnError::ReturnErr => MemoryError::AllocatorErr,
