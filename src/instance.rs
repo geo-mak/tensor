@@ -1,7 +1,7 @@
 use core::hint::unreachable_unchecked;
 
-use crate::core::mem::error::OnError;
-use crate::core::mem::pointers::UnmanagedPointer;
+use crate::mem::error::OnError;
+use crate::mem::pointers::UnmanagedPointer;
 
 use crate::Tensor;
 use crate::assertions::assert_not_zst;

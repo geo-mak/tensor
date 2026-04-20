@@ -2,8 +2,8 @@ use core::fmt;
 use core::fmt::{Debug, Display, Formatter};
 use core::hint::unreachable_unchecked;
 
-use crate::core::mem::error::OnError;
-use crate::core::mem::pointers::UnmanagedPointer;
+use crate::mem::error::OnError;
+use crate::mem::pointers::UnmanagedPointer;
 
 use crate::metadata::TensorMetaData;
 
