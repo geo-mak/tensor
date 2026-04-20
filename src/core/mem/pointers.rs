@@ -8,7 +8,7 @@ use std::alloc::{self, alloc};
 
 use crate::core::mem::error::{MemoryError, OnError};
 use crate::core::opt::OnDrop;
-use crate::core::opt::branch_prediction::likely;
+use crate::core::opt::branch_hints::likely;
 
 /// Debug-mode check for the valid alignment.
 /// This function is only available in debug builds.
