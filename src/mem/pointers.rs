@@ -411,7 +411,7 @@ impl<T> UnmanagedPointer<T> {
 
             while i < count {
                 let value_ptr = self.ptr.add(i);
-                value_ptr.write(value.clone());
+                value_ptr.write(value);
                 i += 1;
             }
         }
