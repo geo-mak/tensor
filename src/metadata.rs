@@ -1,19 +1,19 @@
-use crate::assertions::{assert_non_zero_count, assert_non_zero_size, assert_same_size};
+use crate::assertions::{assert_non_zero_size, assert_same_size};
 use core::fmt::Debug;
 
-/// `TensorMetaData` stores information about dimensions and size of the tensor, and it is
+/// Metadata stores information about dimensions and size of the tensor, and it is
 /// responsible for indexing the values in the data buffer.
 ///
-/// `TensorMetaData` uses C-style "row-major" memory ordering for indexing.
+/// Metadata uses C-style "row-major" memory ordering for indexing.
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct TensorMetaData<const R: usize> {
+pub(crate) struct TensorMetadata<const R: usize> {
     dims: [usize; R],
     strides: [usize; R],
     size: usize,
 }
 
-impl<const R: usize> TensorMetaData<R> {
-    /// Creates new instance of `TensorMetaData`.
+impl<const R: usize> TensorMetadata<R> {
+    /// Creates new instance.
     ///
     /// This function computes the size of the data buffer from the product of the provided
     /// dimensions.
@@ -25,27 +25,27 @@ impl<const R: usize> TensorMetaData<R> {
         let (size, strides) = Self::compute(dims.as_ptr());
         assert_non_zero_size(size);
 
-        TensorMetaData {
+        TensorMetadata {
             dims,
             strides,
             size,
         }
     }
 
-    /// Creates new instance of `TensorMetaData`.
+    /// Compares the size of the data buffer with the size of the provided
+    /// dimensions and returns new instance.
     ///
-    /// This function compares the size of the data buffer with the size of the provided
-    /// dimensions.
+    /// This function 
     ///
-    /// This function will panic if the size of the provided dimensions and the provided size `n`
-    /// don't match.
+    /// This function will panic if the size of the provided dimensions and 
+    /// the provided size `n` don't match.
     #[must_use]
     #[inline]
     pub(crate) const fn new_cmp_eq(n: usize, dims: [usize; R]) -> Self {
         let (new_size, strides) = Self::compute(dims.as_ptr());
         assert_same_size(n, new_size);
 
-        TensorMetaData {
+        TensorMetadata {
             dims,
             strides,
             size: n,

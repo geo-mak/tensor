@@ -5,7 +5,7 @@ use core::hint::unreachable_unchecked;
 use crate::mem::error::OnError;
 use crate::mem::pointers::UnmanagedPointer;
 
-use crate::metadata::TensorMetaData;
+use crate::metadata::TensorMetadata;
 
 /// `Tensor` is a generic data structure that logically arranges its data as multidimensional
 /// points.
@@ -27,7 +27,7 @@ use crate::metadata::TensorMetaData;
 /// These two parameters are part of the type definition, and they remain unchanged throughout the
 /// instance's lifetime.
 pub struct Tensor<T, const R: usize> {
-    pub(crate) metadata: TensorMetaData<R>,
+    pub(crate) metadata: TensorMetadata<R>,
     pub(crate) data: UnmanagedPointer<T>,
 }
 

@@ -5,7 +5,7 @@ use crate::mem::pointers::UnmanagedPointer;
 
 use crate::Tensor;
 use crate::assertions::{assert_non_zero_count, assert_not_zst};
-use crate::metadata::TensorMetaData;
+use crate::metadata::TensorMetadata;
 
 impl<T, const R: usize> Tensor<T, R> {
     /// Creates a new tensor with the specified dimensions and initializes all elements to a
@@ -38,7 +38,7 @@ impl<T, const R: usize> Tensor<T, R> {
     {
         assert_not_zst::<T>();
 
-        let metadata = TensorMetaData::new(dimensions);
+        let metadata = TensorMetadata::new(dimensions);
         let count = metadata.size();
 
         let mut pointer = UnmanagedPointer::new();
@@ -91,7 +91,7 @@ impl<T, const R: usize> Tensor<T, R> {
     {
         assert_not_zst::<T>();
 
-        let metadata = TensorMetaData::new(dimensions);
+        let metadata = TensorMetadata::new(dimensions);
         let count = metadata.size();
 
         let mut pointer = UnmanagedPointer::new();
@@ -147,7 +147,7 @@ impl<T, const R: usize> Tensor<T, R> {
         assert_non_zero_count(values.len());
 
         // First.
-        let metadata = TensorMetaData::new_cmp_eq(values.len(), dimensions);
+        let metadata = TensorMetadata::new_cmp_eq(values.len(), dimensions);
 
         // Second.
         let instance = unsafe {
@@ -193,7 +193,7 @@ impl<T, const R: usize> Tensor<T, R> {
         assert_non_zero_count(values.len());
 
         Self {
-            metadata: TensorMetaData::new_cmp_eq(values.len(), dimensions),
+            metadata: TensorMetadata::new_cmp_eq(values.len(), dimensions),
             data: unsafe { UnmanagedPointer::from_vec(values) },
         }
     }

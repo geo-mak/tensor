@@ -1,7 +1,7 @@
 use core::mem::ManuallyDrop;
 
 use crate::Tensor;
-use crate::metadata::TensorMetaData;
+use crate::metadata::TensorMetadata;
 
 impl<T, const R: usize> Tensor<T, R> {
     /// Reshapes the tensor to new dimensions.
@@ -38,7 +38,7 @@ impl<T, const R: usize> Tensor<T, R> {
     #[inline]
     pub fn change_rank<const N: usize>(self, dimensions: [usize; N]) -> Tensor<T, N> {
         Tensor {
-            metadata: TensorMetaData::new_cmp_eq(self.metadata.size(), dimensions),
+            metadata: TensorMetadata::new_cmp_eq(self.metadata.size(), dimensions),
             data: unsafe { ManuallyDrop::new(self).data.duplicate() },
         }
     }
