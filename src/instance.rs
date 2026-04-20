@@ -4,7 +4,7 @@ use crate::mem::error::OnError;
 use crate::mem::pointers::UnmanagedPointer;
 
 use crate::Tensor;
-use crate::assertions::assert_not_zst;
+use crate::assertions::{assert_non_zero_count, assert_not_zst};
 use crate::metadata::TensorMetaData;
 
 impl<T, const R: usize> Tensor<T, R> {
@@ -144,7 +144,7 @@ impl<T, const R: usize> Tensor<T, R> {
         T: Copy,
     {
         assert_not_zst::<T>();
-        assert!(!values.is_empty(), "Values' slice can't be empty");
+        assert_non_zero_count(values.len());
 
         // First.
         let metadata = TensorMetaData::new_cmp_eq(values.len(), dimensions);
@@ -190,7 +190,7 @@ impl<T, const R: usize> Tensor<T, R> {
     /// ```
     pub fn from_vec(dimensions: [usize; R], values: Vec<T>) -> Self {
         assert_not_zst::<T>();
-        assert!(!values.is_empty(), "Values' vector can't be empty");
+        assert_non_zero_count(values.len());
 
         Self {
             metadata: TensorMetaData::new_cmp_eq(values.len(), dimensions),

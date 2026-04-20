@@ -1,4 +1,4 @@
-use crate::assertions::{assert_non_zero_size, assert_same_size};
+use crate::assertions::{assert_non_zero_count, assert_non_zero_size, assert_same_size};
 use core::fmt::Debug;
 
 /// `TensorMetaData` stores information about dimensions and size of the tensor, and it is
