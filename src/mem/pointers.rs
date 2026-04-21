@@ -169,28 +169,6 @@ impl<T> UnmanagedPointer<T> {
         }
     }
 
-    /// Checks if the pointer is `null`.
-    #[must_use]
-    #[inline(always)]
-    pub const fn is_null(&self) -> bool {
-        self.ptr.is_null()
-    }
-
-    /// Returns an instance with copy of the base pointer.
-    ///
-    /// # Safety
-    ///
-    /// The returned instance might be `null`.
-    ///
-    #[must_use]
-    #[inline(always)]
-    pub const unsafe fn duplicate(&mut self) -> UnmanagedPointer<T> {
-        UnmanagedPointer {
-            ptr: self.ptr,
-            _t: PhantomData,
-        }
-    }
-
     /// Constructs the memory layout for the specified `count` of type `T` in unchecked-mode.
     ///
     /// This method doesn't check for overflow and checks for valid size and alignment in debug
@@ -320,6 +298,28 @@ impl<T> UnmanagedPointer<T> {
         self.ptr = ptr::null_mut();
     }
 
+    /// Checks if the pointer is `null`.
+    #[must_use]
+    #[inline(always)]
+    pub const fn is_null(&self) -> bool {
+        self.ptr.is_null()
+    }
+
+    /// Returns an instance with copy of the base pointer.
+    ///
+    /// # Safety
+    ///
+    /// The returned instance might be `null`.
+    ///
+    #[must_use]
+    #[inline(always)]
+    pub const unsafe fn duplicate(&mut self) -> UnmanagedPointer<T> {
+        UnmanagedPointer {
+            ptr: self.ptr,
+            _t: PhantomData,
+        }
+    }
+
     /// Returns the base pointer.
     #[must_use]
     #[inline(always)]
@@ -338,6 +338,76 @@ impl<T> UnmanagedPointer<T> {
         debug_assert_not_null(self);
 
         self.ptr
+    }
+
+    /// Returns a reference to the element where the current pointer is.
+    ///
+    /// # Safety
+    ///
+    /// - Pointer must point to an already allocated memory-segment aligned to the alignment of `T`..
+    ///
+    /// - The value at the current address must be an initialized value of type T.
+    ///   Accessing an uninitialized element as `T` is `undefined behavior`.
+    ///
+    /// # Time Complexity
+    ///
+    /// _O_(1).
+    ///
+    #[must_use]
+    #[inline(always)]
+    pub const unsafe fn as_ref(&self) -> &T {
+        #[cfg(debug_assertions)]
+        debug_assert_not_null(self);
+
+        unsafe { &*self.ptr }
+    }
+
+    /// Returns an immutable slice of the initialized elements starting from the offset `0`.
+    ///
+    /// Indexing is zero-based, i.e., the last element is at offset `count - 1`, this will make
+    /// the slice range `[0, count - 1]`.
+    ///
+    /// # Safety
+    ///
+    /// - Pointer must point to an already allocated memory-segment aligned to the alignment of `T`.
+    ///
+    /// - `count` must be within the bounds of the initialized elements.
+    ///   Loading an uninitialized elements as `T` is `undefined behavior`.
+    ///
+    /// # Time Complexity
+    ///
+    /// _O_(1).
+    ///
+    #[inline(always)]
+    pub const unsafe fn as_slice(&self, count: usize) -> &[T] {
+        #[cfg(debug_assertions)]
+        debug_assert_not_null(self);
+
+        unsafe { &*ptr::slice_from_raw_parts(self.ptr, count) }
+    }
+
+    /// Returns a mutable slice over `count` initialized elements starting from the offset `0`.
+    ///
+    /// Indexing is zero-based, i.e., the last element is at offset `count - 1`, this will make
+    /// the slice range `[0, count - 1]`.
+    ///
+    /// # Safety
+    ///
+    /// - Pointer must point to an already allocated memory-segment aligned to the alignment of `T`.
+    ///
+    /// - `count` must be within the bounds of the initialized elements.
+    ///   Accessing an uninitialized elements as `T` is `undefined behavior`.
+    ///
+    /// # Time Complexity
+    ///
+    /// _O_(1).
+    ///
+    #[inline(always)]
+    pub const unsafe fn as_slice_mut(&mut self, count: usize) -> &mut [T] {
+        #[cfg(debug_assertions)]
+        debug_assert_not_null(self);
+
+        unsafe { &mut *ptr::slice_from_raw_parts_mut(self.ptr, count) }
     }
 
     /// Returns the base pointer as a pointer of type `C`.
@@ -360,22 +430,22 @@ impl<T> UnmanagedPointer<T> {
         self.ptr.cast::<C>()
     }
 
-    /// Sets the base pointer at current offset plus `t_offset` of the strides of `T`.
+    /// Increments the pointer's offset by `t_strides` as strides of `T`.
     #[inline(always)]
-    pub const unsafe fn set_plus(&mut self, t_offset: usize) {
+    pub(crate) const unsafe fn increment(&mut self, t_strides: usize) {
         #[cfg(debug_assertions)]
         debug_assert_not_null(self);
 
-        unsafe { self.ptr = self.ptr.add(t_offset) };
+        unsafe { self.ptr = self.ptr.add(t_strides) };
     }
 
-    /// Sets the base pointer at current offset minus `t_offset` of the strides of `T`.
+    /// Decrements the pointer's offset by `t_strides` as strides of `T`.
     #[inline(always)]
-    pub const unsafe fn set_minus(&mut self, t_offset: usize) {
+    pub(crate) const unsafe fn decrement(&mut self, t_strides: usize) {
         #[cfg(debug_assertions)]
         debug_assert_not_null(self);
 
-        unsafe { self.ptr = self.ptr.sub(t_offset) };
+        unsafe { self.ptr = self.ptr.sub(t_strides) };
     }
 
     /// Sets all elements in the allocated memory space to the specified value of type `T`.
@@ -549,76 +619,6 @@ impl<T> UnmanagedPointer<T> {
         debug_assert_not_null(self);
 
         unsafe { &mut *(self.ptr).add(offset) }
-    }
-
-    /// Returns a reference to the element where the current pointer is.
-    ///
-    /// # Safety
-    ///
-    /// - Pointer must point to an already allocated memory-segment aligned to the alignment of `T`..
-    ///
-    /// - The value at the current address must be an initialized value of type T.
-    ///   Accessing an uninitialized element as `T` is `undefined behavior`.
-    ///
-    /// # Time Complexity
-    ///
-    /// _O_(1).
-    ///
-    #[must_use]
-    #[inline(always)]
-    pub const unsafe fn reference_first(&self) -> &T {
-        #[cfg(debug_assertions)]
-        debug_assert_not_null(self);
-
-        unsafe { &*self.ptr }
-    }
-
-    /// Returns an immutable slice of the initialized elements starting from the offset `0`.
-    ///
-    /// Indexing is zero-based, i.e., the last element is at offset `count - 1`, this will make
-    /// the slice range `[0, count - 1]`.
-    ///
-    /// # Safety
-    ///
-    /// - Pointer must point to an already allocated memory-segment aligned to the alignment of `T`.
-    ///
-    /// - `count` must be within the bounds of the initialized elements.
-    ///   Loading an uninitialized elements as `T` is `undefined behavior`.
-    ///
-    /// # Time Complexity
-    ///
-    /// _O_(1).
-    ///
-    #[inline(always)]
-    pub const unsafe fn as_slice(&self, count: usize) -> &[T] {
-        #[cfg(debug_assertions)]
-        debug_assert_not_null(self);
-
-        unsafe { &*ptr::slice_from_raw_parts(self.ptr, count) }
-    }
-
-    /// Returns a mutable slice over `count` initialized elements starting from the offset `0`.
-    ///
-    /// Indexing is zero-based, i.e., the last element is at offset `count - 1`, this will make
-    /// the slice range `[0, count - 1]`.
-    ///
-    /// # Safety
-    ///
-    /// - Pointer must point to an already allocated memory-segment aligned to the alignment of `T`.
-    ///
-    /// - `count` must be within the bounds of the initialized elements.
-    ///   Accessing an uninitialized elements as `T` is `undefined behavior`.
-    ///
-    /// # Time Complexity
-    ///
-    /// _O_(1).
-    ///
-    #[inline(always)]
-    pub const unsafe fn as_slice_mut(&mut self, count: usize) -> &mut [T] {
-        #[cfg(debug_assertions)]
-        debug_assert_not_null(self);
-
-        unsafe { &mut *ptr::slice_from_raw_parts_mut(self.ptr, count) }
     }
 
     /// Reads and returns the value at the specified `offset`.
@@ -1153,7 +1153,7 @@ mod tests_unmanaged_ptr {
             unmanaged_ptr.store(0, 1);
             unmanaged_ptr.store(1, 2);
 
-            assert_eq!(unmanaged_ptr.reference_first(), &1);
+            assert_eq!(unmanaged_ptr.as_ref(), &1);
 
             unmanaged_ptr.release(layout);
         }

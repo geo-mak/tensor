@@ -35,9 +35,9 @@ impl<const R: usize> TensorMetadata<R> {
     /// Compares the size of the data buffer with the size of the provided
     /// dimensions and returns new instance.
     ///
-    /// This function 
+    /// This function
     ///
-    /// This function will panic if the size of the provided dimensions and 
+    /// This function will panic if the size of the provided dimensions and
     /// the provided size `n` don't match.
     #[must_use]
     #[inline]
