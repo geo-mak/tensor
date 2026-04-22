@@ -15,9 +15,11 @@ where
 {
     let mut i = 0;
     while i < n {
-        let a_i = *a.add(i);
-        let b_i = *b.add(i);
-        r.add(i).write(a_i + b_i);
+        unsafe {
+            let a_i = *a.add(i);
+            let b_i = *b.add(i);
+            r.add(i).write(a_i + b_i);
+        }
         i += 1;
     }
 }
@@ -121,8 +123,10 @@ where
 {
     let mut i = 0;
     while i < n {
-        let a_i = *a.add(i);
-        r.add(i).write(a_i + v);
+        unsafe {
+            let a_i = *a.add(i);
+            r.add(i).write(a_i + v);
+        }
         i += 1;
     }
 }
