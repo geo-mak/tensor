@@ -127,7 +127,6 @@ impl<T> UnmanagedPointer<T> {
     /// # Time Complexity
     ///
     /// _O_(n) where `n` is length of the slice.
-    #[must_use]
     #[inline]
     pub unsafe fn from_slice(slice: &[T], on_err: OnError) -> Result<Self, MemoryError>
     where
@@ -782,7 +781,6 @@ impl<T> UnmanagedPointer<T> {
     /// # Time Complexity
     ///
     /// _O_(n) where `n` is the number (`count`) of values to be copied.
-    #[must_use]
     #[inline]
     pub unsafe fn make_copy(&self, count: usize, on_err: OnError) -> Result<Self, MemoryError>
     where
@@ -818,7 +816,6 @@ impl<T> UnmanagedPointer<T> {
     /// # Time Complexity
     ///
     /// _O_(n) where `n` is the number (`count`) of values to be cloned.
-    #[must_use]
     pub unsafe fn make_clone(&self, count: usize, on_err: OnError) -> Result<Self, MemoryError>
     where
         T: Clone,
