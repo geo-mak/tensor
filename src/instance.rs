@@ -19,7 +19,9 @@ impl<T, const R: usize> Tensor<T, R> {
     /// - `value`: The value to initialize all elements of the tensor to.
     ///
     /// # Panics
-    /// This function will panic if any dimension has `0` value.
+    /// This function will panic when:
+    /// - `T` is ZST.
+    /// - This function will panic if any dimension has `0` value.
     ///
     /// # Example
     ///
@@ -71,7 +73,9 @@ impl<T, const R: usize> Tensor<T, R> {
     /// - `dimensions`: An array specifying the size of each dimension of the tensor.
     ///
     /// # Panics
-    /// This function will panic if any dimension has `0` value.
+    /// This function will panic when:
+    /// - `T` is ZST.
+    /// - This function will panic if any dimension has `0` value.
     ///
     /// # Example
     ///
@@ -124,8 +128,10 @@ impl<T, const R: usize> Tensor<T, R> {
     /// - `values`: A slice specifying the values in the tensor.
     ///
     /// # Panics
-    /// This function will panic if the slice is empty, or if the size of dimensions doesn't match
-    /// the number of provided elements.
+    /// This function will panic when:
+    /// - `T` is ZST.
+    /// - The slice is empty.
+    /// - The size of dimensions doesn't match the number of provided elements.
     ///
     /// # Example
     ///
@@ -173,8 +179,11 @@ impl<T, const R: usize> Tensor<T, R> {
     /// - `values`: A vector specifying the values in the tensor.
     ///
     /// # Panics
-    /// This function will panic if the vector is empty, or if the size of dimensions doesn't match
-    /// the number of provided elements.
+    /// This function will panic when:
+    /// - `T` is ZST.
+    /// - The vector is empty.
+    /// - Vector's capacity doesn't equal its length.
+    /// - The size of dimensions doesn't match the number of provided elements.
     ///
     /// # Example
     ///
@@ -317,6 +326,14 @@ mod instance_tests {
     #[should_panic]
     fn test_from_vec_zero_len() {
         let vec = Vec::<u8>::new();
+        Tensor::from_vec([0, 0, 0], vec);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_from_vec_extra_cap() {
+        let mut vec = Vec::<u8>::with_capacity(2);
+        vec.push(1);
         Tensor::from_vec([0, 0, 0], vec);
     }
 
