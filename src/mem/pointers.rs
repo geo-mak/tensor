@@ -803,7 +803,7 @@ impl<T> UnmanagedPointer<T> {
         }
     }
 
-      /// Creates new instance and clones values from the current memory space
+    /// Creates new instance and clones values from the current memory space
     /// to the new memory space.
     ///
     /// This call is **unwind-safe**.
@@ -1364,9 +1364,7 @@ mod tests_unmanaged_ptr {
 
     #[test]
     fn test_unmanaged_ptr_drop_range() {
-        let drop_count = DropCounter {
-            count: Rc::new(RefCell::new(0)),
-        };
+        let drop_count = Rc::new(RefCell::new(0));
 
         let mut unmanaged_ptr = UnmanagedPointer::new();
 
@@ -1375,13 +1373,20 @@ mod tests_unmanaged_ptr {
 
             let _ = unmanaged_ptr.acquire(layout, OnError::Panic);
 
-            for i in 0..3 {
-                unmanaged_ptr.store(i, drop_count.clone())
+            for i in 0..5 {
+                unmanaged_ptr.store(
+                    i,
+                    DropCounter {
+                        count: Rc::clone(&drop_count),
+                    },
+                );
             }
 
             unmanaged_ptr.drop_range(0..3);
 
-            assert_eq!(*drop_count.count.borrow(), 3);
+            assert_eq!(*drop_count.borrow(), 3);
+
+            unmanaged_ptr.drop_range(3..5);
 
             unmanaged_ptr.release(layout);
         }
