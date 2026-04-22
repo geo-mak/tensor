@@ -1,4 +1,4 @@
-use core::ops::{AddAssign, Mul, Sub};
+use core::ops::{AddAssign, Mul};
 
 use crate::assertions::assert_same_shape;
 use crate::tensor::Tensor;
