@@ -7,8 +7,7 @@ use crate::mem::pointers::UnmanagedPointer;
 
 use crate::metadata::TensorMetadata;
 
-/// `Tensor` is a generic data structure that logically arranges its data as multidimensional
-/// points.
+/// A generic data structure that logically arranges its data as multidimensional points.
 ///
 /// Each dimension is represented as a contiguous vector, where each value corresponds to a
 /// coordinate.
@@ -19,7 +18,7 @@ use crate::metadata::TensorMetadata;
 /// The number of dimensions, known as `Rank`, is denoted by the character `R`.
 /// A scalar has rank `0`, a vector has rank `1`, a matrix is rank `2`.
 ///
-/// `Tensor` has two generic parameters:
+/// # Type Parameters
 ///
 /// - `T`: The `type` of the stored data.  
 /// - `R`: A `value` specifying the rank of the tensor.
