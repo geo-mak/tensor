@@ -151,7 +151,8 @@ impl<T> UnmanagedPointer<T> {
     ///
     /// # Safety
     ///
-    /// The allocation size of `vec` must be greater than `0`.
+    /// - The allocation size of `vec` must be greater than `0`.
+    /// - The allocated capacity of the vector must be equal to its length.
     ///
     /// # Time Complexity
     ///
