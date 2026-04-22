@@ -751,22 +751,22 @@ impl<T> UnmanagedPointer<T> {
 
         let self_ptr = self.ptr;
 
-        let cloned = 0;
+        let mut unwind_guard =
+            OnDrop::set_on(0, |cloned| unsafe { self.drop_initialized(*cloned) });
 
-        let mut drop_guard =
-            OnDrop::set_on(cloned, |cloned| unsafe { self.drop_initialized(*cloned) });
+        let i = &mut unwind_guard.arg;
 
-        unsafe {
-            for i in 0..clone_count {
-                let src_ptr = source.add(i);
-                let dst_ptr = self_ptr.add(i);
+        while *i < clone_count {
+            unsafe {
+                let src_ptr = source.add(*i);
+                let dst_ptr = self_ptr.add(*i);
                 dst_ptr.write((*src_ptr).clone());
-                drop_guard.arg += 1;
             }
+
+            *i += 1;
         }
 
-        // Cloned successfully (If any).
-        drop_guard.set_off();
+        unwind_guard.set_off();
     }
 
     /// Creates new instance and copies values from the current memory space to the new memory space.
