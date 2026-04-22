@@ -1,5 +1,6 @@
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
-use tensor::Tensor;
+
+use tensor::{Tensor, TryCast};
 
 fn bench_set(c: &mut Criterion) {
     let mut t = Tensor::<u8, 3>::new_set([10, 10, 10], 3);
@@ -130,7 +131,7 @@ fn bench_cast_1e6(c: &mut Criterion) {
     let t = Tensor::<i8, 1>::new_set([1_000_000], -3);
     c.bench_function("tensor, i8, cast -> f64, R=1, N=1e6", |b| {
         b.iter(|| {
-            black_box(t.try_cast::<f64>().unwrap());
+            black_box(TryCast::<Tensor<f64, 1>>::try_cast(&t).unwrap());
         })
     });
 }
