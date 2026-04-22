@@ -18,6 +18,14 @@ pub(crate) const fn assert_non_zero_count(count: usize) {
     assert!(count != 0, "Values's len must be greater than `0`");
 }
 
+/// Condition: The count of the values is not `0`.
+pub(crate) const fn assert_lean_vec(vec_cap: usize, vec_len: usize) {
+    assert!(
+        vec_cap == vec_len,
+        "Vector's capacity must be identical to its len"
+    );
+}
+
 /// Condition: The values' count matches the dimensions' size (product).
 pub(crate) const fn assert_same_size(data_len: usize, dims_size: usize) {
     assert!(

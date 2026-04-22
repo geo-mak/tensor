@@ -4,7 +4,7 @@ use crate::mem::error::OnError;
 use crate::mem::pointers::UnmanagedPointer;
 
 use crate::Tensor;
-use crate::assertions::{assert_non_zero_count, assert_not_zst};
+use crate::assertions::{assert_lean_vec, assert_non_zero_count, assert_not_zst};
 use crate::metadata::TensorMetadata;
 
 impl<T, const R: usize> Tensor<T, R> {
@@ -191,6 +191,7 @@ impl<T, const R: usize> Tensor<T, R> {
     pub fn from_vec(dimensions: [usize; R], values: Vec<T>) -> Self {
         assert_not_zst::<T>();
         assert_non_zero_count(values.len());
+        assert_lean_vec(values.capacity(), values.len());
 
         Self {
             metadata: TensorMetadata::new_cmp_eq(values.len(), dimensions),
