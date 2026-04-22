@@ -11,7 +11,6 @@ impl<T, const R: usize> Tensor<T, R> {
     {
         assert_same_shape(self, other);
 
-        // len is assumed to be > 0.
         let len = self.metadata.size();
         let a = &self.data;
         let b = &other.data;
@@ -34,7 +33,7 @@ impl<T, const R: usize> Tensor<T, R> {
     /// Returns the cosine similarity between two tensors.
     pub fn cosine_similarity(&self, other: &Self) -> f64
     where
-        T: Copy + Default + Into<f64> + AddAssign<T> + Mul<Output = T>,
+        T: Copy + Default + Into<f64>,
     {
         assert_same_shape(self, other);
 
@@ -42,15 +41,15 @@ impl<T, const R: usize> Tensor<T, R> {
         let a = &self.data;
         let b = &other.data;
 
-        let mut product_a_b: T = T::default();
-        let mut sum_exp_a: T = T::default();
-        let mut sum_exp_b: T = T::default();
+        let mut product_a_b: f64 = 0.0;
+        let mut sum_exp_a: f64 = 0.0;
+        let mut sum_exp_b: f64 = 0.0;
 
         unsafe {
             let mut i = 0;
             while i < len {
-                let a_i = *a.reference(i);
-                let b_i = *b.reference(i);
+                let a_i: f64 = (*a.reference(i)).into();
+                let b_i: f64 = (*b.reference(i)).into();
                 product_a_b += a_i * b_i;
                 sum_exp_a += a_i * a_i;
                 sum_exp_b += b_i * b_i;
@@ -58,21 +57,21 @@ impl<T, const R: usize> Tensor<T, R> {
             }
         }
 
-        let e_norm_a: f64 = sum_exp_a.into().sqrt();
-        let e_norm_b: f64 = sum_exp_b.into().sqrt();
+        let e_norm_a: f64 = sum_exp_a.sqrt();
+        let e_norm_b: f64 = sum_exp_b.sqrt();
 
         if e_norm_a == 0.0 || e_norm_b == 0.0 {
             0.0
         } else {
             // Negative values are NaN for square root, and all ops with NaN return NaN.
-            product_a_b.into() / (e_norm_a * e_norm_b)
+            product_a_b / (e_norm_a * e_norm_b)
         }
     }
 
     /// Returns the Euclidean distance between two tensors.
     pub fn euclidean_distance(&self, other: &Self) -> f64
     where
-        T: Copy + Default + Into<f64> + AddAssign<T> + Mul<Output = T> + Sub<Output = T>,
+        T: Copy + Default + Into<f64>,
     {
         assert_same_shape(self, other);
 
@@ -80,20 +79,20 @@ impl<T, const R: usize> Tensor<T, R> {
         let a = &self.data;
         let b = &other.data;
 
-        let mut sum: T = T::default();
+        let mut sum: f64 = 0.0;
 
         unsafe {
             let mut i = 0;
             while i < len {
-                let a_i = *a.reference(i);
-                let b_i = *b.reference(i);
+                let a_i: f64 = (*a.reference(i)).into();
+                let b_i: f64 = (*b.reference(i)).into();
                 let delta = a_i - b_i;
                 sum += delta * delta;
                 i += 1;
             }
         }
 
-        sum.into().sqrt()
+        sum.sqrt()
     }
 }
 
