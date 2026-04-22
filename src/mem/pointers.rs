@@ -922,9 +922,9 @@ impl<T> UnmanagedPointer<T> {
         unsafe { ptr::drop_in_place(ptr::slice_from_raw_parts_mut(self.ptr, count)) };
     }
 
-    /// Calls `drop` on the initialized elements in the specified range.
+    /// Calls drop on the initialized elements in the specified range.
     ///
-    /// The total drop `count` equals `end - start - 1`.
+    /// The total drop `count` equals `end - start`.
     ///
     /// This method is no-op if `T` is of a trivial type.
     ///
