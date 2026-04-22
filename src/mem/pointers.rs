@@ -802,8 +802,10 @@ impl<T> UnmanagedPointer<T> {
         }
     }
 
-    /// Creates new instance and clones values from the current memory space
+      /// Creates new instance and clones values from the current memory space
     /// to the new memory space.
+    ///
+    /// This call is **unwind-safe**.
     ///
     /// # Safety
     ///
@@ -816,6 +818,7 @@ impl<T> UnmanagedPointer<T> {
     /// # Time Complexity
     ///
     /// _O_(n) where `n` is the number (`count`) of values to be cloned.
+    #[must_use]
     pub unsafe fn make_clone(&self, count: usize, on_err: OnError) -> Result<Self, MemoryError>
     where
         T: Clone,
@@ -830,8 +833,15 @@ impl<T> UnmanagedPointer<T> {
 
             instance.acquire(layout, on_err)?;
 
+            let unwind_guard =
+                OnDrop::set_on((instance.duplicate(), layout), |(instance, layout)| {
+                    instance.release(*layout);
+                });
+
             // Unwind-safe.
             instance.clone_from(self.ptr, count);
+
+            unwind_guard.set_off();
 
             Ok(instance)
         }
