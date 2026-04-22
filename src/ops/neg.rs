@@ -14,8 +14,10 @@ where
 {
     let mut i = 0;
     while i < n {
-        let a_i = *a.add(i);
-        r.add(i).write(-a_i);
+        unsafe {
+            let a_i = *a.add(i);
+            r.add(i).write(-a_i);
+        }
         i += 1;
     }
 }
