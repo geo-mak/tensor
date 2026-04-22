@@ -1,10 +1,6 @@
 use crate::cast::error::CastError;
 use crate::cast::traits::TryCast;
 
-//////////////////////////////////////////////////////////////////////
-// Cast implementations for f64
-//////////////////////////////////////////////////////////////////////
-
 impl TryCast<u8> for f64 {
     fn try_cast(&self) -> Result<u8, CastError> {
         if *self < 0.0 || *self > u8::MAX as f64 {
@@ -79,6 +75,9 @@ impl TryCast<u32> for f64 {
 
 impl TryCast<i64> for f64 {
     fn try_cast(&self) -> Result<i64, CastError> {
+        if *self < i64::MIN as f64 || *self >= 9223372036854775808.0 {
+            return Err(CastError::Overflow);
+        }
         if *self != self.trunc() {
             return Err(CastError::PrecisionLoss);
         }
@@ -88,7 +87,7 @@ impl TryCast<i64> for f64 {
 
 impl TryCast<u64> for f64 {
     fn try_cast(&self) -> Result<u64, CastError> {
-        if *self < 0.0 {
+        if *self < 0.0 || *self >= 18446744073709551616.0 {
             return Err(CastError::Overflow);
         }
         if *self != self.trunc() {
