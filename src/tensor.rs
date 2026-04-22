@@ -138,16 +138,13 @@ where
 
             writeln!(f, "{num}: {index:?} -> {value}")?;
 
-            // Only reachable if R > 0.
             let mut i = R;
             'idx: while i != 0 {
                 i -= 1;
-                // Try incrementing within bounds.
                 if index[i] + 1 < shape[i] {
                     index[i] += 1;
                     break 'idx;
                 } else if i == 0 {
-                    // All dimensions have been traversed.
                     return Ok(());
                 } else {
                     index[i] = 0;
@@ -157,7 +154,6 @@ where
             num += 1;
         }
 
-        // Only reachable if R == 0.
         Ok(())
     }
 }
