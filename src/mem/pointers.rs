@@ -159,8 +159,8 @@ impl<T> UnmanagedPointer<T> {
     #[must_use]
     #[inline(always)]
     pub unsafe fn from_vec(vec: Vec<T>) -> Self {
-        #[cfg(debug_assertions)]
-        debug_assert_valid_layout(vec.capacity() * Self::T_SIZE, Self::T_ALIGN);
+        debug_assert!(vec.len() > 0);
+        debug_assert!(vec.capacity() == vec.len());
 
         UnmanagedPointer {
             ptr: ManuallyDrop::new(vec).as_mut_ptr(),
