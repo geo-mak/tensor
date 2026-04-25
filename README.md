@@ -1,5 +1,4 @@
 # Tensor
-[![CI](https://github.com/geo-mak/tensor/actions/workflows/ci.yml/badge.svg)](https://github.com/geo-mak/tensor/actions/workflows/ci.yml)
 
 Multidimensional tensor implementation in Rust with focus on simplicity in terms of usage and implementation.
 
