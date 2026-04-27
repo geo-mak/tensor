@@ -751,8 +751,7 @@ impl<T> UnmanagedPointer<T> {
 
         let self_ptr = self.ptr;
 
-        let mut unwind_guard =
-            OnDrop::set_on(0, |cloned| unsafe { self.drop_initialized(*cloned) });
+        let mut unwind_guard = OnDrop::set_on(0, |cloned| unsafe { self.drop_in_place(*cloned) });
 
         let i = &mut unwind_guard.arg;
 
@@ -915,7 +914,7 @@ impl<T> UnmanagedPointer<T> {
     /// _O_(n) where `n` is the number (`count`) of the elements to be dropped.
     ///
     #[inline(always)]
-    pub unsafe fn drop_initialized(&mut self, count: usize) {
+    pub unsafe fn drop_in_place(&mut self, count: usize) {
         #[cfg(debug_assertions)]
         debug_assert_not_null(self);
 
@@ -1338,10 +1337,10 @@ mod tests_unmanaged_ptr {
                 );
             }
 
-            unmanaged_ptr.drop_initialized(0);
+            unmanaged_ptr.drop_in_place(0);
             assert_eq!(*drop_count.borrow(), 0);
 
-            unmanaged_ptr.drop_initialized(3);
+            unmanaged_ptr.drop_in_place(3);
 
             assert_eq!(*drop_count.borrow(), 3);
 
@@ -1473,7 +1472,7 @@ mod tests_unmanaged_ptr {
             assert!(result.is_err());
             assert_eq!(*drop_counter.borrow(), 5);
 
-            source.drop_initialized(10);
+            source.drop_in_place(10);
             source.release(layout);
             target.release(layout);
         }

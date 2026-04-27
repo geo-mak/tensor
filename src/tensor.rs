@@ -35,7 +35,7 @@ impl<T, const R: usize> Drop for Tensor<T, R> {
         // len is assumed to be > 0, an invariant that must be upheld by all constructors.
         let len = self.metadata.size();
         unsafe {
-            self.data.drop_initialized(len);
+            self.data.drop_in_place(len);
             let layout = self.data.layout_unchecked_of(len);
             self.data.release(layout);
         }

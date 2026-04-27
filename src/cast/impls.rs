@@ -39,7 +39,7 @@ where
                 Err(err) => {
                     // Cleanup.
                     unsafe {
-                        output.drop_initialized(i);
+                        output.drop_in_place(i);
                         output.release(layout);
                     }
 
