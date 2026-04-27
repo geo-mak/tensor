@@ -11,7 +11,7 @@ impl<T, const R: usize> Tensor<T, R> {
     /// Creates a new tensor with the specified dimensions and initializes all elements to a
     /// given value.
     ///
-    /// For creating `Tensor` declaratively, consider using `tensor!` macro.
+    /// For creating an instance declaratively, consider using `tensor!` macro.
     ///
     /// # Parameters
     ///
@@ -21,7 +21,7 @@ impl<T, const R: usize> Tensor<T, R> {
     /// # Panics
     /// This function will panic when:
     /// - `T` is ZST.
-    /// - This function will panic if any dimension has `0` value.
+    /// - any dimension has `0` value.
     ///
     /// # Example
     ///
@@ -66,7 +66,7 @@ impl<T, const R: usize> Tensor<T, R> {
     /// Creates a new tensor with the specified dimensions and initializes all elements to
     /// default value of `T`.
     ///
-    /// For creating `Tensor` declaratively, consider using `tensor!` macro.
+    /// For creating an instance declaratively, consider using `tensor!` macro.
     ///
     /// # Parameters
     ///
@@ -75,7 +75,7 @@ impl<T, const R: usize> Tensor<T, R> {
     /// # Panics
     /// This function will panic when:
     /// - `T` is ZST.
-    /// - This function will panic if any dimension has `0` value.
+    /// - any dimension has `0` value.
     ///
     /// # Example
     ///
@@ -120,7 +120,7 @@ impl<T, const R: usize> Tensor<T, R> {
 
     /// Creates a new tensor with the specified values and dimensions.
     ///
-    /// For creating `Tensor` declaratively, consider using `tensor!` macro.
+    /// For creating an instance declaratively, consider using `tensor!` macro.
     ///
     /// # Parameters
     ///
@@ -130,8 +130,8 @@ impl<T, const R: usize> Tensor<T, R> {
     /// # Panics
     /// This function will panic when:
     /// - `T` is ZST.
-    /// - The slice is empty.
-    /// - The size of dimensions doesn't match the number of provided elements.
+    /// - the slice is empty.
+    /// - the size of dimensions doesn't match the number of provided elements.
     ///
     /// # Example
     ///
@@ -171,7 +171,7 @@ impl<T, const R: usize> Tensor<T, R> {
 
     /// Creates a new tensor from vector with the specified dimensions.
     ///
-    /// For creating `Tensor` declaratively, consider using `tensor!` macro.
+    /// For creating an instance declaratively, consider using `tensor!` macro.
     ///
     /// # Parameters
     ///
@@ -181,9 +181,9 @@ impl<T, const R: usize> Tensor<T, R> {
     /// # Panics
     /// This function will panic when:
     /// - `T` is ZST.
-    /// - The vector is empty.
-    /// - Vector's capacity doesn't equal its length.
-    /// - The size of dimensions doesn't match the number of provided elements.
+    /// - the vector is empty.
+    /// - vector's capacity doesn't equal its length.
+    /// - the size of dimensions doesn't match the number of provided elements.
     ///
     /// # Example
     ///

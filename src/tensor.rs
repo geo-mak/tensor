@@ -46,7 +46,7 @@ impl<T, const R: usize> Clone for Tensor<T, R>
 where
     T: Clone,
 {
-    /// Creates new `Tensor` by cloning the data from the current instance.
+    /// Creates a new instance by cloning the data from the current instance.
     fn clone(&self) -> Self {
         unsafe {
             let metadata = self.metadata;
@@ -68,7 +68,7 @@ impl<T, const R: usize> Tensor<T, R>
 where
     T: Copy,
 {
-    /// Creates new `Tensor` by copying _bitwise_ the data from the current instance.
+    /// Creates a new instance by copying _bitwise_ the data from the current instance.
     pub fn copy(&self) -> Self {
         unsafe {
             let metadata = self.metadata;
