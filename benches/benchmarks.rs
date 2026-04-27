@@ -4,9 +4,11 @@ use tensor::{Tensor, TryCast};
 
 fn bench_set(c: &mut Criterion) {
     let mut t = Tensor::<u8, 3>::new_set([10, 10, 10], 3);
+    let mut i = 0u8;
     c.bench_function("tensor, u8, set, R=3, N=1e3", |b| {
         b.iter(|| {
-            black_box(t.set(&[5, 5, 5], 5));
+            black_box(t.set(&[5, 5, 5], i));
+            i = i.wrapping_add(1);
         })
     });
 }
@@ -22,9 +24,12 @@ fn bench_get(c: &mut Criterion) {
 
 fn bench_reshape(c: &mut Criterion) {
     let mut t = Tensor::<u8, 3>::new_set([10, 10, 10], 3);
+    let shapes = [[2, 5, 100], [10, 10, 10]];
+    let mut i = 0;
     c.bench_function("tensor, u8, reshape, R=3, N=1e3", |b| {
         b.iter(|| {
-            black_box(t.reshape([2, 5, 100]));
+            black_box(t.reshape(shapes[i % 2]));
+            i += 1;
         })
     });
 }
@@ -40,12 +45,15 @@ fn bench_add_new_1e6(c: &mut Criterion) {
 }
 
 fn bench_add_mut_1e6(c: &mut Criterion) {
-    let mut t1 = Tensor::<f64, 1>::new_set([1_000_000], 3.0);
+    let t1 = Tensor::<f64, 1>::new_set([1_000_000], 3.0);
     let t2 = Tensor::<f64, 1>::new_set([1_000_000], 3.0);
     c.bench_function("tensor, f64, add_mut, R=1, N=1e6", |b| {
-        b.iter(|| {
-            black_box(&mut t1 + &t2);
-        })
+        b.iter_with_setup(
+            || t1.clone(),
+            |mut t1_mut| {
+                black_box(&mut t1_mut + &t2);
+            },
+        )
     });
 }
 
@@ -60,12 +68,15 @@ fn bench_sub_1e6(c: &mut Criterion) {
 }
 
 fn bench_sub_mut_1e6(c: &mut Criterion) {
-    let mut t1 = Tensor::<f64, 1>::new_set([1_000_000], 3.0);
+    let t1 = Tensor::<f64, 1>::new_set([1_000_000], 3.0);
     let t2 = Tensor::<f64, 1>::new_set([1_000_000], 3.0);
     c.bench_function("tensor, f64, sub_mut, R=1, N=1e6", |b| {
-        b.iter(|| {
-            black_box(&mut t1 - &t2);
-        })
+        b.iter_with_setup(
+            || t1.clone(),
+            |mut t1_mut| {
+                black_box(&mut t1_mut - &t2);
+            },
+        )
     });
 }
 
@@ -80,12 +91,15 @@ fn bench_mul_1e6(c: &mut Criterion) {
 }
 
 fn bench_mul_mut_1e6(c: &mut Criterion) {
-    let mut t1 = Tensor::<f64, 1>::new_set([1_000_000], 3.0);
+    let t1 = Tensor::<f64, 1>::new_set([1_000_000], 3.0);
     let t2 = Tensor::<f64, 1>::new_set([1_000_000], 3.0);
     c.bench_function("tensor, f64, mul_mut, R=1, N=1e6", |b| {
-        b.iter(|| {
-            black_box(&mut t1 * &t2);
-        })
+        b.iter_with_setup(
+            || t1.clone(),
+            |mut t1_mut| {
+                black_box(&mut t1_mut * &t2);
+            },
+        )
     });
 }
 
@@ -100,12 +114,15 @@ fn bench_div_1e6(c: &mut Criterion) {
 }
 
 fn bench_div_mut_1e6(c: &mut Criterion) {
-    let mut t1 = Tensor::<f64, 1>::new_set([1_000_000], 3.0);
+    let t1 = Tensor::<f64, 1>::new_set([1_000_000], 3.0);
     let t2 = Tensor::<f64, 1>::new_set([1_000_000], 3.0);
     c.bench_function("tensor, f64, div_mut, R=1, N=1e6", |b| {
-        b.iter(|| {
-            black_box(&mut t1 / &t2);
-        })
+        b.iter_with_setup(
+            || t1.clone(),
+            |mut t1_mut| {
+                black_box(&mut t1_mut / &t2);
+            },
+        )
     });
 }
 
