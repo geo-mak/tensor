@@ -1,12 +1,15 @@
 # Tensor
 
-Multidimensional tensor implementation in Rust with focus on simplicity in terms of usage and implementation.
+Multidimensional tensor implementation in Rust.
 
-## Features
+A design project (mostly).
 
-- Relatively simple and lightweight implementation that relies mostly on `core` intrinsics.
+## Implementation highlights
+
 - Variety of operations with great attention to usability and performance.
 - Explicit and transparent regarding its operational semantics.
+- Not (yet) accelerated via parallelism or acceleration hardware.
+- Eager execution of all ops.
 
 ## Examples
 
