@@ -8,7 +8,9 @@ A design project (mostly).
 
 - Variety of operations with great attention to usability and performance.
 - Explicit and transparent regarding its operational semantics.
-- Not (yet) accelerated via parallelism or acceleration hardware.
+- Not (yet) accelerated via parallelism or acceleration hardware. 
+  This would be added after implementing support for `compute engines (backends)`, which was there in the ancient times of the project's life, but removed in the version that went public after failing to make up my mind regarding many design details (as far as I can remember, the project started in spring 2024).
+
 - Eager execution of all ops.
 
 ## Examples
