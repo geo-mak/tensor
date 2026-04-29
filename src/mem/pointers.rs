@@ -295,14 +295,8 @@ impl<T> UnmanagedPointer<T> {
 
         unsafe { alloc::dealloc(self.ptr as *mut u8, layout) };
 
-        self.ptr = ptr::null_mut();
-    }
-
-    /// Checks if the pointer is `null`.
-    #[must_use]
-    #[inline(always)]
-    pub const fn is_null(&self) -> bool {
-        self.ptr.is_null()
+        #[cfg(debug_assertions)]
+        self.debug_set_pointer_null()
     }
 
     /// Returns an instance with copy of the base pointer.
@@ -959,17 +953,30 @@ impl<T> UnmanagedPointer<T> {
     }
 }
 
+// Debug-mode functions.
+#[cfg(debug_assertions)]
+impl<T> UnmanagedPointer<T> {
+    /// Sets the pointer to null.
+    ///
+    /// This function is available in debug-mode only.
+    const fn debug_set_pointer_null(&mut self) {
+        self.ptr = ptr::null_mut();
+    }
+
+    /// Checks if the pointer is `null`.
+    ///
+    /// This function is available in debug-mode only.
+    #[must_use]
+    pub(crate) const fn debug_is_null(&self) -> bool {
+        self.ptr.is_null()
+    }
+}
+
 #[cfg(test)]
 mod tests_unmanaged_ptr {
     use super::*;
     use std::cell::RefCell;
     use std::rc::Rc;
-
-    #[test]
-    fn test_unmanaged_ptr_new() {
-        let unmanaged_ptr: UnmanagedPointer<u8> = UnmanagedPointer::new();
-        assert!(unmanaged_ptr.is_null());
-    }
 
     #[test]
     fn test_unmanaged_ptr_make_layout_unchecked_ok() {
@@ -1041,17 +1048,21 @@ mod tests_unmanaged_ptr {
     }
 
     #[test]
-    fn test_unmanaged_ptr_acquire() {
-        let mut unmanaged_ptr: UnmanagedPointer<u8> = UnmanagedPointer::new();
-
+    fn test_unmanaged_ptr_acquire_release() {
         unsafe {
-            let layout = unmanaged_ptr.layout_unchecked_of(3);
-            let result = unmanaged_ptr.acquire(layout, OnError::Panic);
+            let mut unmanaged_ptr: UnmanagedPointer<u8> = UnmanagedPointer::new();
 
-            assert!(result.is_ok());
-            assert!(!unmanaged_ptr.is_null());
+            let layout = unmanaged_ptr.layout_unchecked_of(3);
+
+            let _ = unmanaged_ptr.acquire(layout, OnError::Panic);
+
+            #[cfg(debug_assertions)]
+            assert!(!unmanaged_ptr.debug_is_null());
 
             unmanaged_ptr.release(layout);
+
+            #[cfg(debug_assertions)]
+            assert!(unmanaged_ptr.debug_is_null());
         }
     }
 
@@ -1065,26 +1076,9 @@ mod tests_unmanaged_ptr {
             let layout = unmanaged_ptr.layout_unchecked_of(1);
             let _ = unmanaged_ptr.acquire(layout, OnError::Panic);
 
-            assert!(!unmanaged_ptr.is_null());
+            assert!(!unmanaged_ptr.debug_is_null());
 
             let _ = unmanaged_ptr.acquire(layout, OnError::Panic);
-        }
-    }
-
-    #[test]
-    fn test_unmanaged_ptr_acquire_release() {
-        unsafe {
-            let mut unmanaged_ptr: UnmanagedPointer<u8> = UnmanagedPointer::new();
-
-            let layout = unmanaged_ptr.layout_unchecked_of(3);
-
-            let _ = unmanaged_ptr.acquire(layout, OnError::Panic);
-
-            assert!(!unmanaged_ptr.is_null());
-
-            unmanaged_ptr.release(layout);
-
-            assert!(unmanaged_ptr.is_null());
         }
     }
 
