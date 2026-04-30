@@ -4,7 +4,7 @@ use crate::mem::error::OnError;
 use crate::mem::pointers::UnmanagedPointer;
 
 use crate::Tensor;
-use crate::assertions::{assert_lean_vec, assert_non_zero_count, assert_not_zst};
+use crate::assertions::{assert_non_zero_count, assert_not_zst};
 use crate::metadata::TensorMetadata;
 
 impl<T, const R: usize> Tensor<T, R> {
@@ -169,7 +169,7 @@ impl<T, const R: usize> Tensor<T, R> {
         }
     }
 
-    /// Creates a new tensor from vector with the specified dimensions.
+    /// Creates a new tensor from boxed slice with the specified dimensions.
     ///
     /// For creating an instance declaratively, consider using `tensor!` macro.
     ///
@@ -181,8 +181,7 @@ impl<T, const R: usize> Tensor<T, R> {
     /// # Panics
     /// This function will panic when:
     /// - `T` is ZST.
-    /// - the vector is empty.
-    /// - vector's capacity doesn't equal its length.
+    /// - the slice is empty.
     /// - the size of dimensions doesn't match the number of provided elements.
     ///
     /// # Example
@@ -190,21 +189,22 @@ impl<T, const R: usize> Tensor<T, R> {
     /// ```
     /// use tensor::Tensor;
     ///
-    /// let tensor = Tensor::from_vec([2, 3], vec![1,2,3,4,5,6]);
+    /// let storage = Box::new([1,2,3,4,5,6]);
+    ///
+    /// let tensor = Tensor::from_boxed_slice([2, 3], storage);
     ///
     /// assert_eq!(tensor.shape(), &[2, 3]);
     ///
     /// assert_eq!(tensor.get(&[0,0]), &1);
     /// assert_eq!(tensor.get(&[1,2]), &6);
     /// ```
-    pub fn from_vec(dimensions: [usize; R], values: Vec<T>) -> Self {
+    pub fn from_boxed_slice(dimensions: [usize; R], values: Box<[T]>) -> Self {
         assert_not_zst::<T>();
         assert_non_zero_count(values.len());
-        assert_lean_vec(values.capacity(), values.len());
 
         Self {
             metadata: TensorMetadata::new_cmp_eq(values.len(), dimensions),
-            data: unsafe { UnmanagedPointer::from_vec(values) },
+            data: unsafe { UnmanagedPointer::from_boxed_slice(values) },
         }
     }
 }
@@ -302,45 +302,41 @@ mod instance_tests {
     }
 
     #[test]
-    fn test_from_vec() {
-        let tensor = Tensor::from_vec([2, 3], vec![1, 2, 3, 4, 5, 6]);
+    fn test_from_boxed_slice() {
+        let storage: Box<[u8]> = Box::new([1, 2, 3, 4, 5, 6]);
+        let tensor = Tensor::from_boxed_slice([2, 3], storage);
         assert_eq!(tensor.shape(), &[2, 3]);
         assert_eq!(tensor.get(&[0, 0]), &1);
         assert_eq!(tensor.get(&[1, 2]), &6);
     }
 
     #[test]
-    fn test_from_vec_zero_rank() {
-        let tensor = Tensor::from_vec([], vec![1]);
+    fn test_from_boxed_slice_zero_rank() {
+        let storage: Box<[u8]> = Box::new([1]);
+
+        let tensor = Tensor::from_boxed_slice([], storage);
         assert_eq!(tensor.shape(), &[]);
         assert_eq!(tensor.get(&[]), &1);
     }
 
     #[test]
     #[should_panic]
-    fn test_from_vec_zst() {
-        Tensor::from_vec([1], vec![()]);
+    fn test_from_boxed_slice_zst() {
+        Tensor::from_boxed_slice([1], vec![()].into_boxed_slice());
     }
 
     #[test]
     #[should_panic]
-    fn test_from_vec_zero_len() {
-        let vec = Vec::<u8>::new();
-        Tensor::from_vec([0, 0, 0], vec);
+    fn test_from_boxed_slice_zero_len() {
+        let storage: Box<[u8]> = Box::new([]);
+        Tensor::from_boxed_slice([0, 0, 0], storage);
     }
 
     #[test]
     #[should_panic]
-    fn test_from_vec_extra_cap() {
-        let mut vec = Vec::<u8>::with_capacity(2);
-        vec.push(1);
-        Tensor::from_vec([0, 0, 0], vec);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_from_vec_invalid_shape() {
-        Tensor::from_vec([2, 3], vec![1, 2, 3, 4, 5]);
+    fn test_from_boxed_slice_invalid_shape() {
+        let storage: Box<[u8]> = Box::new([1, 2, 3, 4, 5]);
+        Tensor::from_boxed_slice([2, 3], storage);
     }
 
     #[test]

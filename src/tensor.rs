@@ -163,7 +163,10 @@ mod core_ops_tests {
 
     #[test]
     fn test_tensor_copy() {
-        let mut tensor = Tensor::from_vec([2, 3], vec![1, 2, 3, 4, 5, 6]);
+        let storage = Box::new([1, 2, 3, 4, 5, 6]);
+
+        let mut tensor = Tensor::from_boxed_slice([2, 3], storage);
+
         let copied_tensor = tensor.copy();
 
         assert_eq!(tensor.shape(), copied_tensor.shape());
@@ -176,7 +179,10 @@ mod core_ops_tests {
 
     #[test]
     fn test_clone() {
-        let mut tensor = Tensor::from_vec([2, 3], vec![1, 2, 3, 4, 5, 6]);
+        let storage = Box::new([1, 2, 3, 4, 5, 6]);
+
+        let mut tensor = Tensor::from_boxed_slice([2, 3], storage);
+
         let cloned_tensor = tensor.clone();
 
         assert_eq!(tensor.shape(), cloned_tensor.shape());
@@ -189,9 +195,12 @@ mod core_ops_tests {
 
     #[test]
     fn test_partial_eq() {
-        let tensor1 = Tensor::from_vec([2, 3], vec![1, 2, 3, 4, 5, 6]);
-        let tensor2 = Tensor::from_vec([2, 3], vec![1, 2, 3, 4, 5, 6]);
-        let tensor3 = Tensor::from_vec([2, 3], vec![6, 5, 4, 3, 2, 1]);
+        let storage_1 = Box::new([1, 2, 3, 4, 5, 6]);
+        let storage_2 = Box::new([6, 5, 4, 3, 2, 1]);
+
+        let tensor1 = Tensor::from_boxed_slice([2, 3], storage_1.clone());
+        let tensor2 = Tensor::from_boxed_slice([2, 3], storage_1);
+        let tensor3 = Tensor::from_boxed_slice([2, 3], storage_2);
 
         assert_eq!(tensor1, tensor2);
         assert_ne!(tensor1, tensor3);

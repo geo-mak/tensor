@@ -147,24 +147,23 @@ impl<T> UnmanagedPointer<T> {
         Ok(instance)
     }
 
-    /// Creates a new instance from vector.
+    /// Creates a new instance from boxed slice.
     ///
     /// # Safety
     ///
-    /// - The allocation size of `vec` must be greater than `0`.
-    /// - The allocated capacity of the vector must be equal to its length.
+    /// - T can't be ZST.
+    /// - The length must be greater than `0`.
     ///
     /// # Time Complexity
     ///
     /// _O_(1).
     #[must_use]
     #[inline(always)]
-    pub unsafe fn from_vec(vec: Vec<T>) -> Self {
-        debug_assert!(vec.len() > 0);
-        debug_assert!(vec.capacity() == vec.len());
+    pub unsafe fn from_boxed_slice(slice: Box<[T]>) -> Self {
+        debug_assert!(slice.len() > 0);
 
         UnmanagedPointer {
-            ptr: ManuallyDrop::new(vec).as_mut_ptr(),
+            ptr: ManuallyDrop::new(slice).as_mut_ptr(),
             _t: PhantomData,
         }
     }
